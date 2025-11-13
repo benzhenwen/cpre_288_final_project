@@ -1,0 +1,15 @@
+.jxbrowser.userdata
+.project
+.metadata
+.settings
+.vscode
+Debug
+dvt
+RemoteSystemsTempFiles
+targetConfigs
+.ccsproject
+.cproject
+.project
+putty.log
+tm4c123gh6pm.cmd
+tm4c123gh6pm_startup_ccs.c
