@@ -164,8 +164,13 @@ int main(void)
 
                 if      (command[0] == 'f') cq_queue(gen_move_cmd_intr(instruction_value, &move_bump_interrupt_callback)); // allow bot to bump and auto detect
                 else if (command[0] == 'r') cq_queue(gen_move_reverse_cmd(instruction_value));
-                else if (command[0] == 't') cq_queue(gen_rotate_cmd(instruction_value));
+                else if (command[0] == 't') {
+                    move_stop();
+                    cq_clear();
+                    cq_queue(gen_rotate_cmd(instruction_value));
+                }
                 else if (command[0] == 'm') {
+                    move_stop();
 
                     float x = instruction_value % 10000 - 5000;
                     float y = instruction_value / 10000 - 5000;
@@ -175,7 +180,7 @@ int main(void)
                     ur_send_line(buff);
 
                     cq_clear();
-                    cq_queue(gen_move_to_cmd(x, y));
+                    cq_queue(gen_move_to_cmd_intr(x, y, &move_bump_interrupt_callback));
                 }
             }
         }

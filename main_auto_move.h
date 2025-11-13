@@ -38,6 +38,8 @@ char identify_ground_object_interrupt_callback(oi_t * sensor_data) {
     object_map[object_map_c] = (object_positional) { get_pos_x() + tx, get_pos_y() + ty, 65, (char) 0 };
     object_map_c++;
 
+    send_data_packet(object_map, object_map_c); // update python data packet
+
     if (full_auto_flag) {
         cq_queue(gen_move_reverse_cmd(300));
 

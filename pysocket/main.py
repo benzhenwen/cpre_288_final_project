@@ -84,7 +84,7 @@ class MapRenderer:
     """
     Simple Pygame renderer showing a 10m x 10m world centered at the origin.
     """
-    FIELD_HALF_MM = 2000  # ±2 meters
+    FIELD_HALF_MM = 5000  # ±2 meters
     ROBOT_RADIUS_MM = 160
 
     def __init__(self, shared_state: WorldState, state_lock: threading.Lock, on_move_command):
@@ -92,7 +92,7 @@ class MapRenderer:
         self.lock = state_lock
 
         pygame.init()
-        self.W, self.H = 800, 800
+        self.W, self.H = 1100, 1100
         self.screen = pygame.display.set_mode((self.W, self.H))
         pygame.display.set_caption("CyBot World View (±3 m)")
         self.clock = pygame.time.Clock()
@@ -243,10 +243,19 @@ class MapRenderer:
         """
         One frame. Returns False if window is closing.
         """
+        # Copy state under lock
+        with self.lock:
+            pos_x, pos_y, pos_r = self.state.pos_x, self.state.pos_y, self.state.pos_r_deg
+            tgt_x, tgt_y, tgt_r = self.state.target_x, self.state.target_y, self.state.target_r_deg
+            mmf_v = self.state.move_mode_flag
+            tgt_apr_dist = self.state.apprach_distance_offset
+            objects = list(self.state.objects)
+
+        # button press detection
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return False
-            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1: # move to (also overrides button presses)
                 mx, my = event.pos
 
                 # check for button press first
@@ -269,7 +278,7 @@ class MapRenderer:
                         
                     current_button_y -= button_height + 5
 
-                if not button_pressed:
+                if not button_pressed: # movement
                     # turn it into a field move command
                     x_mm, y_mm = self.screen_to_world_mm(mx, my)
 
@@ -286,16 +295,25 @@ class MapRenderer:
                             print(f"[click] Sent move: {cmd}")
                         except Exception as e:
                             print(f"[click] send failed: {e}")
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 3: # rotate to
+                mx, my = event.pos
+                # turn it into a field move command
+                x_mm, y_mm = self.screen_to_world_mm(mx, my)
+
+                # Clamp to the field bounds (±2000 mm)
+                x_mm = max(-self.FIELD_HALF_MM, min(self.FIELD_HALF_MM, x_mm))
+                y_mm = max(-self.FIELD_HALF_MM, min(self.FIELD_HALF_MM, y_mm))
+
+                target_angle = round(math.atan2(y_mm - pos_y, x_mm - pos_x)  * (180 / math.pi) - pos_r)
+                cmd = f"t{target_angle}"
+                try:
+                    # Send the turn command
+                    self.on_move_command(cmd + "\n")
+                    print(f"[click] Sent rotate: {cmd}")
+                except Exception as e:
+                    print(f"[click] send failed: {e}")
 
         self.draw_grid()
-
-        # Copy state under lock
-        with self.lock:
-            pos_x, pos_y, pos_r = self.state.pos_x, self.state.pos_y, self.state.pos_r_deg
-            tgt_x, tgt_y, tgt_r = self.state.target_x, self.state.target_y, self.state.target_r_deg
-            mmf_v = self.state.move_mode_flag
-            tgt_apr_dist = self.state.apprach_distance_offset
-            objects = list(self.state.objects)
 
         if tgt_x is not None:
             self.draw_movement_target(pos_x, pos_y, tgt_x, tgt_y, tgt_r or 0.0, mmf_v, tgt_apr_dist, self.target_green, self.target_dark_green)
