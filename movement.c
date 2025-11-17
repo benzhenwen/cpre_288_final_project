@@ -5,11 +5,14 @@
 #include "movement.h"
 
 // ---------- config stuff -----------
-const int _movement_speed = 150; // 0 - 500
-const int _rotation_speed = 80;
 
-const int _min_movement_speed = 110; // 0 - 500
-const int _min_rotation_speed = 30;
+// old slow values: 150 80  110 30
+
+const int _movement_speed = 180; // 0 - 500
+const int _rotation_speed = 120;
+
+const int _min_movement_speed = 120; // 0 - 500
+const int _min_rotation_speed = 60;
 
 float _movement_scaler = 1; // TODO - made modifiable
 float _rotation_scaler = 1.007;

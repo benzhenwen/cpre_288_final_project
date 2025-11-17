@@ -1,11 +1,6 @@
 #pragma once
 
 
-// object map (xy based)
-object_positional object_map[16];
-int object_map_c;
-
-
 
 // distance between two points
 float distance_between(float x1, float y1, float x2, float y2) {

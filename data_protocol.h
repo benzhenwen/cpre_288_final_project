@@ -19,7 +19,7 @@ void send_data_packet(object_positional * object_map, int object_map_c) {
     ur_send_float(get_pos_y());
     ur_send_float(get_pos_r());
 
-    // Target pos (mm, deg) — treating target_r as heading in degrees
+    // Target pos (mm, deg) 
     ur_send_float(get_target_x());
     ur_send_float(get_target_y());
     ur_send_float(get_target_r());
@@ -43,8 +43,8 @@ void send_data_packet(object_positional * object_map, int object_map_c) {
         ur_send_float(o->y);
         ur_send_float(o->radius);
 
-        // 'type' is a boolean byte: 0 = short (dark blue), 1 = tall (light blue)
-        ur_send_byte(o->type ? (char)1 : (char)0);
+        // type
+        ur_send_byte(o->type);
     }
 }
 

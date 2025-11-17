@@ -12,12 +12,12 @@
 // scan data buffers
 float data[SCAN_BUFFER_SIZE];
 
-// object radial storage
+// object radial storage (small temp)
 object_radial objects[8];
 int objects_c;
 
 // object map (xy based)
-object_positional object_map[16];
+object_positional object_map[64];
 int object_map_c;
 
 

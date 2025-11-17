@@ -37,7 +37,7 @@ class Object2D:
     x_mm: float
     y_mm: float
     r_mm: float
-    tall: bool  # True = tall (1), False = short (0)
+    t: int   # 0: short, 1: tal, 2: dark ir, 3: light ir
 
 
 @dataclass
@@ -108,9 +108,12 @@ class MapRenderer:
         self.robot_red = (220, 60, 60)
         self.target_green = (30, 212, 54)
         self.target_dark_green = (16, 148, 62)
-        self.object_blue_dark = (70, 120, 220)   # short (0)
-        self.object_blue_light = (120, 170, 255) # tall  (1)
+        self.object_blue_dark = (70, 120, 220)   
+        self.object_blue_light = (120, 170, 255) 
+        self.object_black = (80, 80, 80)
+        self.object_white = (210, 210, 210)
         self.white = (230, 230, 230)
+        self.error_color = (245, 7, 209)
 
         self.font = pygame.font.SysFont("consolas", 14)
 
@@ -199,9 +202,17 @@ class MapRenderer:
     def draw_objects(self, objects: List[Object2D]):
         for obj in objects:
             sx, sy = self.to_screen(obj.x_mm, obj.y_mm)
-            rr = max(1, int(obj.r_mm * self.scale))
-            color = self.object_blue_light if obj.tall else self.object_blue_dark
-            pygame.draw.circle(self.screen, color, (sx, sy), rr, 0)
+            rr = max(1, int(obj.r_mm * self.scale))     
+            color = self.error_color
+            if   (obj.t == 0):
+                color = self.object_blue_dark  
+            elif (obj.t == 1):
+                color = self.object_blue_light   
+            elif (obj.t == 2):
+                color = self.object_black      
+            elif (obj.t == 3):
+                color = self.object_white 
+            pygame.draw.circle(self.screen, color, (sx, sy), rr, width= (3 if (obj.t == 3) else 0))
 
     def draw_hud(self):
         with self.lock:
@@ -525,7 +536,7 @@ class CyBotClient:
             count_byte = self._recv_exact(1)
             obj_count = count_byte[0]
 
-            if obj_count > 16:
+            if obj_count > 64:
                 # Bail out of this packet to avoid desync.
                 raise ValueError(f"Protocol error: object_count={obj_count} (>16)")
 
@@ -538,8 +549,8 @@ class CyBotClient:
             for _ in range(obj_count):
                 rec = block[offset:offset+13]
                 x, y, r = struct.unpack("<fff", rec[:12])
-                type_bool = (rec[12] != 0)
-                objects.append(Object2D(x_mm=x, y_mm=y, r_mm=r, tall=type_bool))
+                type_obj = rec[12]
+                objects.append(Object2D(x_mm=x, y_mm=y, r_mm=r, t=type_obj))
                 offset += 13
 
             # Commit to shared state

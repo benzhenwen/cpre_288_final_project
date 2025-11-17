@@ -17,13 +17,13 @@ char auto_cal_end_callback(oi_t * sensor_data) {
 
     if (end_cond) {
 
-        timer_waitMillis(100);
 
         // collect that point
         int ir_scan;
         do {
+            timer_waitMillis(100);
             ir_scan = sc_scan_ir(90);
-        } while (ir_scan < 100);
+        } while (ir_scan < 100 || (ir_auto_cal_step == 0 && ir_scan < 2000));
 
         float ping_scan = pb_get_dist();
 

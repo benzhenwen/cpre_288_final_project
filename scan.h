@@ -8,6 +8,9 @@
 // SCAN RESOLUTION in deg
 #define SCAN_RESOLUTION 1
 
+// a compensation of n degrees (clockwise) due to scan sweep latency
+#define SWEEP_ANGLE_COMP (-3)
+
 
 
 typedef struct object_radial {
@@ -22,7 +25,7 @@ typedef struct object_positional {
     float x; // x pos in mm
     float y; // y pos in mm
     float radius; // radius of the object in mm;
-    char type; // 0 is short object, 1 is tall object
+    char type; // 0 is short object, 1 is tall object, 2 is hole (black), 3 is edge (white)
 } object_positional;
 
 

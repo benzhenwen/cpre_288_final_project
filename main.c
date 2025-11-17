@@ -17,19 +17,21 @@
 // cal values local store for servo
 
 
+// for bot 1: 7050, 35100
 // for bot 7: 8200, 35900
 // for bot 17: 7050, 34050
 
 #define CAL_A 7050
-#define CAL_B 34050
+#define CAL_B 35100
 
 
 // cal values local store for ir
+// for bot 1: 41034.980469, 0.011351
 // for bot 7: 37082.558594, 3.035430
 // for bot 17: 14464.520508, 7.239097
 
-#define CAL_IR_A 14464.520508
-#define CAL_IR_B 7.239097
+#define CAL_IR_A 41034.980469
+#define CAL_IR_B 0.011351
 
 
 // ---------------- SCAN DATA ----------------
@@ -107,7 +109,6 @@ int main(void)
             else if (command[0] == 's') {
                 // object scan
                 perform_scan_and_obj_detection();
-                update_object_map();
                 send_data_packet(object_map, object_map_c); // update python data packet
             }
             // start auto mode
@@ -117,7 +118,6 @@ int main(void)
 
                 // object scan
                 perform_scan_and_obj_detection();
-                update_object_map();
                 send_data_packet(object_map, object_map_c); // update python data packet
 
                 // move to smallest
@@ -191,7 +191,7 @@ int main(void)
         // standard main loop call, update commands
         cq_update();
         if (cq_size() > 0) {
-            lcd_printf("(%.1f, %.1f, %.1f)\nqs: %d\n(%.1f, %.1f, %.1f)", get_pos_x(), get_pos_y(), get_pos_r(), cq_size(), get_target_x(), get_target_y(), get_target_r());
+//            lcd_printf("(%.1f, %.1f, %.1f)\nqs: %d\n(%.1f, %.1f, %.1f)", get_pos_x(), get_pos_y(), get_pos_r(), cq_size(), get_target_x(), get_target_y(), get_target_r());
             send_data_packet(object_map, object_map_c); // update python data packet
         }
 

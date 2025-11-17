@@ -114,8 +114,7 @@ void sc_clean_scan(float * data, int data_c) {
 // filters objects with a rad smaller than min_rad
 #define MARCH_EDGE_TOLERANCE 10
 
-// a compensation of 3 degrees (clockwise) due to scan sweep latency
-#define SWEEP_ANGLE_COMP (-5)
+
 
 
 void sc_find_objects(float * data, int data_c, float max_distance, int min_rad, object_radial * objects, int * objects_c) { 

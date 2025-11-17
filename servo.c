@@ -90,7 +90,7 @@ void sv_set_cal_known(uint32_t min_val, uint32_t max_val) {
 
 void sv_set_angle(int angle) {
     const int new_servo_value = SERVO_MIN_VALUE + roundf( (angle / 180.0f) * (SERVO_MAX_VALUE - SERVO_MIN_VALUE) );
-    unsigned int wait_time = (abs(new_servo_value - g_servo_high_ticks) * 800u) / (SERVO_MAX_VALUE - SERVO_MIN_VALUE); // rotation speed of about n milli seconds per 180 deg
+    unsigned int wait_time = (abs(new_servo_value - g_servo_high_ticks) * 900u) / (SERVO_MAX_VALUE - SERVO_MIN_VALUE); // rotation speed of about n milli seconds per 180 deg
 
     sv_set_width(new_servo_value);
     timer_waitMillis(wait_time);
