@@ -2,6 +2,7 @@
 
 
 #include "main_scan_data.h"
+#include "main_objects.h"
 
 #include "movement.h"
 #include "command.h"
@@ -70,27 +71,10 @@ char identify_ground_object_interrupt_callback(oi_t * sensor_data) {
 // cliff detection
 
 #define BLACK_THRESH 300
-#define WHITE_THRESH 2500
+#define WHITE_THRESH_HIGH_TRIGGER 2500
+#define WHITE_THRESH_LOW_TRIGGER 2300
 
-// returns 0: normal, 1: black, 2: white for any of the cliff sensors
-// priority is left to right, however for this application the details are not neccesary.
-char cliff_state(oi_t * sensor_data) {
-    const uint16_t l_v  = (sensor_data->cliffLeftSignal);
-    const uint16_t fl_v = (sensor_data->cliffFrontLeftSignal);
-    const uint16_t fr_v = (sensor_data->cliffFrontRightSignal);
-    const uint16_t r_v  = (sensor_data->cliffRightSignal);
-
-    // flag value for each cliff - 0: normal, 1: black, 2: white
-    const char l_f  = (l_v  < BLACK_THRESH) ? 1 : ((l_v  > WHITE_THRESH) ? 2 : 0);
-    const char fl_f = (fl_v < BLACK_THRESH) ? 1 : ((fl_v > WHITE_THRESH) ? 2 : 0);
-    const char fr_f = (fr_v < BLACK_THRESH) ? 1 : ((fr_v > WHITE_THRESH) ? 2 : 0);
-    const char r_f  = (r_v  < BLACK_THRESH) ? 1 : ((r_v  > WHITE_THRESH) ? 2 : 0);
-
-    if (l_f)  return l_f;
-    if (fl_f) return fl_f;
-    if (fr_f) return fr_f;
-              return r_f;
-}
+// cliff type 0: normal, 1: black, 2: white for any of the cliff sensors
 
 
 
@@ -103,42 +87,62 @@ char cliff_type;
 
 // the second callback for the cliff identification
 char identify_cliff_interrupt_callback_2(oi_t * sensor_data) {
-    // keep turning if there is a cliff
-    if (cliff_state(sensor_data)) return 0;
+    const uint16_t fl_v = (sensor_data->cliffFrontLeftSignal);
+    const uint16_t fr_v = (sensor_data->cliffFrontRightSignal);
+
+    // flag value for each cliff - 0: normal, 1: black, 2: white
+    const char fl_f = (fl_v < BLACK_THRESH) ? 1 : ((fl_v > WHITE_THRESH_LOW_TRIGGER) ? 2 : 0);
+    const char fr_f = (fr_v < BLACK_THRESH) ? 1 : ((fr_v > WHITE_THRESH_LOW_TRIGGER) ? 2 : 0);
+
+    // keep turning until both front sensors are no longer triggered
+    if (fl_f || fr_f) return 0;
 
     // collect data point a
-    move_stop();
     cliff_detect_angle_b = get_pos_r();
 
     // add the cliff to the map
-    if (cliff_detect_angle_b < cliff_detect_angle_b) cliff_detect_angle_b += 360;
-    float cliff_angle = ((cliff_detect_angle_a + cliff_detect_angle_b) / 2 + 180) * (M_PI / 180);
+    if (cliff_detect_angle_b + 180 < cliff_detect_angle_a) cliff_detect_angle_b += 360;
+    if (cliff_detect_angle_a + 180 < cliff_detect_angle_b) cliff_detect_angle_a += 360;
+    float cliff_angle = ((cliff_detect_angle_a + cliff_detect_angle_b) / 2) * (M_PI / 180);
 
-    const float cliff_object_rad = (cliff_type == 1) ? 100.0f : 262144.0f; // still maintaining about 0.025 float resolution while being large. DO RESEARCH BEFORE CHANGING THIS VALUE!!
+    const float cliff_object_rad = (cliff_type == 1) ? 100.0f : 262144.0f; // still maintaining about 0.05 float resolution while being large. DO RESEARCH BEFORE CHANGING THIS VALUE!!
 
     const float tx = cosf(cliff_angle) * (cliff_object_rad + 160);
     const float ty = sinf(cliff_angle) * (cliff_object_rad + 160);
 
-    object_map[object_map_c] = (object_positional) { get_pos_x() + tx, get_pos_y() + ty, cliff_object_rad, (char) (cliff_type + 1) };
-    object_map_c++;
+    if (cliff_type == 1) { // add normal hole
+        object_map[object_map_c] = (object_positional) { get_pos_x() + tx, get_pos_y() + ty, cliff_object_rad + 50, (char) (2) };
+        object_map_c++;
+    } else { // wall object
+        add_wall_object(get_pos_x() + tx, get_pos_y() + ty, cliff_object_rad);
+    }
 
     send_data_packet(object_map, object_map_c); // update python data packet
+
+    // move away from the cliff a bit
+    cq_queue(gen_rotate_to_cmd(cliff_angle * (180 / M_PI) + 180));
+    cq_queue(gen_move_cmd(80));
 
     return 1;
 }
 
 // the point of this callback is simply to turn until no cliff sensors are being triggered
 char identify_cliff_interrupt_callback(oi_t * sensor_data) {
-    // keep turning if there is a cliff
-    if (cliff_state(sensor_data)) return 0;
+    const uint16_t fl_v = (sensor_data->cliffFrontLeftSignal);
+    const uint16_t fr_v = (sensor_data->cliffFrontRightSignal);
+
+    // flag value for each cliff - 0: normal, 1: black, 2: white
+    const char fl_f = (fl_v < BLACK_THRESH) ? 1 : ((fl_v > WHITE_THRESH_HIGH_TRIGGER) ? 2 : 0);
+    const char fr_f = (fr_v < BLACK_THRESH) ? 1 : ((fr_v > WHITE_THRESH_HIGH_TRIGGER) ? 2 : 0);
+
+    // keep turning until a front sensor triggers
+    if (!(fl_f || fr_f)) return 0;
 
     // collect data point a
-    move_stop();
     cliff_detect_angle_a = get_pos_r();
 
-    // rotate the opposite direction a little, then run the same routine to find when we are no longer triggering a cliff
-    cq_queue(gen_rotate_cmd(180));
-    cq_queue(gen_rotate_cmd_intr(-cliff_turn_direction, &identify_cliff_interrupt_callback_2));
+    // keep rotating
+    cq_queue(gen_rotate_cmd_intr(cliff_turn_direction, &identify_cliff_interrupt_callback_2));
 
     return 1;
 }
@@ -154,17 +158,17 @@ char move_bump_interrupt_callback(oi_t * sensor_data) {
 
     // basic cliff
     const uint16_t l_v  = (sensor_data->cliffLeftSignal);
-//    const uint16_t fl_v = (sensor_data->cliffFrontLeftSignal);
+    const uint16_t fl_v = (sensor_data->cliffFrontLeftSignal);
     const uint16_t fr_v = (sensor_data->cliffFrontRightSignal);
     const uint16_t r_v  = (sensor_data->cliffRightSignal);
 
     // flag value for each cliff - 0: normal, 1: black, 2: white
-    const char l_f  = (l_v  < BLACK_THRESH) ? 1 : ((l_v  > WHITE_THRESH) ? 2 : 0);
-//    const char fl_f = (fl_v < BLACK_THRESH) ? 1 : ((fl_v > WHITE_THRESH) ? 2 : 0);
-    const char fr_f = (fr_v < BLACK_THRESH) ? 1 : ((fr_v > WHITE_THRESH) ? 2 : 0);
-    const char r_f  = (r_v  < BLACK_THRESH) ? 1 : ((r_v  > WHITE_THRESH) ? 2 : 0);
+    const char l_f  = (l_v  < BLACK_THRESH) ? 1 : ((l_v  > WHITE_THRESH_HIGH_TRIGGER) ? 2 : 0);
+    const char fl_f = (fl_v < BLACK_THRESH) ? 1 : ((fl_v > WHITE_THRESH_HIGH_TRIGGER) ? 2 : 0);
+    const char fr_f = (fr_v < BLACK_THRESH) ? 1 : ((fr_v > WHITE_THRESH_HIGH_TRIGGER) ? 2 : 0);
+    const char r_f  = (r_v  < BLACK_THRESH) ? 1 : ((r_v  > WHITE_THRESH_HIGH_TRIGGER) ? 2 : 0);
 
-    const char is_cliff = cliff_state(sensor_data);
+    const char is_cliff = l_f || fl_f || fr_f || r_f;
 
     // no interrupt check
     if (!is_bump && !is_cliff) return 0;
@@ -177,10 +181,19 @@ char move_bump_interrupt_callback(oi_t * sensor_data) {
         cq_queue(gen_rotate_cmd_intr(sensor_data->bumpRight ? -90 : 90, &identify_ground_object_interrupt_callback));
     }
     else if (is_cliff) {
+        if      (l_f)  cliff_type = l_f;
+        else if (fl_f) cliff_type = fl_f;
+        else if (fr_f) cliff_type = fr_f;
+        else           cliff_type = r_f;
+
         ur_send_line("cliff");
-        cliff_type = is_cliff;
-        cliff_turn_direction = (r_f || fr_f) ? 120 : -120;
-        if (!r_f && !l_f) cq_queue(gen_rotate_cmd((cliff_turn_direction > 0) ? 35 : -35));
+        cliff_turn_direction = (r_f || fr_f) ? -90 : 90;
+
+        if (fr_f || fl_f) {
+            cq_queue(gen_rotate_cmd(75)); // if both sensors are triggered, rotate a bit to prime the routine
+            cliff_turn_direction = -90;
+        }
+
         cq_queue(gen_rotate_cmd_intr(cliff_turn_direction, &identify_cliff_interrupt_callback));
     }
 

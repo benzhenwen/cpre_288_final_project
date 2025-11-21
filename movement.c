@@ -46,6 +46,16 @@ float get_target_x() { return target_x; }
 float get_target_y() { return target_y; }
 float get_target_r() { return target_r; }
 
+void reset_pos() {
+    pos_x = 0;
+    pos_y = 0;
+    pos_r = 0;
+    target_x = 0;
+    target_y = 0;
+    target_r = 0;
+    move_stop();
+}
+
 float calculate_relative_target_r(float r) {
     while (r < 0) r += 360; // get positive
     r = fmod(r, 360); // bound 0-360

@@ -18,20 +18,24 @@
 
 
 // for bot 1: 7050, 35100
+// for bot 3: 9750, 39900
+// for bot 5: 8400, 35700
 // for bot 7: 8200, 35900
 // for bot 17: 7050, 34050
 
-#define CAL_A 7050
-#define CAL_B 35100
+#define CAL_A 8400
+#define CAL_B 35700
 
 
 // cal values local store for ir
 // for bot 1: 41034.980469, 0.011351
+// for bot 3:
+// for bot 5: 36906.015625, 2.875138
 // for bot 7: 37082.558594, 3.035430
 // for bot 17: 14464.520508, 7.239097
 
-#define CAL_IR_A 41034.980469
-#define CAL_IR_B 0.011351
+#define CAL_IR_A 36906.015625
+#define CAL_IR_B 2.875138
 
 
 // ---------------- SCAN DATA ----------------
@@ -154,6 +158,11 @@ int main(void)
                 char buff[32];
                 sprintf(buff, "ping dist: %.5f", d);
                 ur_send_line(buff);
+            }
+            else if (command[0] == '!') {
+                object_map_c = 0;
+                reset_pos();
+                send_data_packet(object_map, object_map_c); // update python data packet
             }
 
             // is a non special command that has a second part

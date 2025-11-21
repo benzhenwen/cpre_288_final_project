@@ -9,6 +9,8 @@ float get_pos_x();
 float get_pos_y();
 float get_pos_r();
 
+void reset_pos();
+
 float get_target_x();
 float get_target_y();
 float get_target_r();

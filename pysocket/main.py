@@ -66,6 +66,7 @@ class Button:
 
 
 ALL_BUTTONS = [
+    Button("reset_field", "!"),
     Button("oi_free", "e"),
     Button("stop", "k"),
     Button("scan", "s"),

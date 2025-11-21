@@ -74,6 +74,33 @@ void remove_object_from_map(int index) {
     object_map_c--;
 }
 
+void add_wall_object(float x, float y, float r) {
+    // remove all now irrelevant walls
+    int i;
+    for (i = 0; i < object_map_c; i++) {
+
+        // basic info about the object
+        const float dy = object_map[i].y - y;
+        const float dx = object_map[i].x - x;
+
+        const float dist_bearing = sqrtf(dx*dx + dy*dy);
+
+        // border (white) objects dissapear when another one roughly takes its place
+        if (object_map[i].type == 3) {
+
+            if (dist_bearing < r) {
+                ur_send_line("removing border cos it's a stupid little bitch");
+                remove_object_from_map(i);
+                i--;
+            }
+        }
+    }
+
+    // add the wall
+    object_map[object_map_c] = (object_positional) { x, y, r, (char) (3) };
+    object_map_c++;
+}
+
 void update_object_map() {
 
     // remove all now irrelevant objects
@@ -98,13 +125,12 @@ void update_object_map() {
             sprintf(buff, "object check removal: %.2f, %.2f", dx, dy);
             ur_send_line(buff);
 
-            if (angle_bearing > -90 && angle_bearing < 90 && dist_bearing < SCAN_MAX_DISTANCE*10) {
+            if (angle_bearing > -80 && angle_bearing < 80 && dist_bearing < SCAN_MAX_DISTANCE*10) {
                 ur_send_line("removing object cos it's a stupid little bitch");
                 remove_object_from_map(i);
                 i--;
             }
         }
-
     }
 
     // add the newly scanned objects

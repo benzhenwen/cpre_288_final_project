@@ -6,8 +6,8 @@
 // 1 degree increments, 181 data points
 #define SCAN_BUFFER_SIZE (180 / SCAN_RESOLUTION + 1)
 
-// only allow objects up to 100cm away (0.8m)
-#define SCAN_MAX_DISTANCE 100
+// only allow objects up to x cm away
+#define SCAN_MAX_DISTANCE 80
 
 // scan data buffers
 float data[SCAN_BUFFER_SIZE];
