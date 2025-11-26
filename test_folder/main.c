@@ -9,6 +9,15 @@ void ur_send_line(char * str) {
     printf("uart_line: %s\n", str);
 }
 
+// position stuff
+float pos_x = 0;
+float pos_y = 0;
+float pos_r = 0;
+
+float get_pos_x() { return pos_x; }
+float get_pos_y() { return pos_y; }
+float get_pos_r() { return pos_r; }
+
 #include "main_scan_data.h"
 #include "main_pathfinding.h"
 
@@ -18,15 +27,6 @@ void add_object(object_positional object) {
     object_map[object_map_c] = object;
     object_map_c++;
 }
-    
-// position stuff
-float pos_x = 0;
-float pos_y = 0;
-float pos_r = 0;
-
-float get_pos_x() { return pos_x; }
-float get_pos_y() { return pos_y; }
-float get_pos_r() { return pos_r; }
 
 void move_to(float x, float y) {
     pos_x = x;
@@ -46,10 +46,24 @@ void print_objs_as_desmos() {
 int main() {
     printf("meow\n");
 
-    add_object((object_positional) {500, 0, 40, 1});
+    // add_object((object_positional) {-99999, 0, 99999, 1});
+    // add_object((object_positional) {0, -99999, 99999, 1});
     print_objs_as_desmos();
 
-    exp_map_new_searched_point(4 * 333, 3 * 333);
-    printf("%d\n", exp_map_val_at(4, 3));
+    int i, x, y;
+    for (i = 0; i < 16; i++) {
+        for (x = 0; x < 16; x++) for (y = 0; y < 16; y++) {
+            if (x == 5);
+            else exp_map_new_searched_point(x * 333.333f, y * 333.333f); 
+        }
+    }
+
+    printf("%d\n", exp_map_val_at(2, 1));
+    
+    for (i = 0; i < 20; i++) {
+        float px, py;
+        exp_map_pick_random_point(&px, &py);
+        printf("(%.2f, %.2f)\n", px, py);
+    }
 
 }

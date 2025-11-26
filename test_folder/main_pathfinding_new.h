@@ -1,4 +1,5 @@
 #include "main_scan_data.h"
+#include "rng.h"
 
 #include <math.h>
 #include <stdint.h>
@@ -42,7 +43,17 @@ static void exp_map_shift_down() {
     for (y = 0; y < 15; y++) {
         exploratory_map[y] = exploratory_map[y+1];
     }
-    exploratory_map[16] = 0;
+    exploratory_map[15] = 0;
+}
+static void exp_map_dec_all() {
+    int x, y;
+    for (x = 0; x < 16; x++) {
+        for (y = 0; y < 16; y++) {
+            int map_val = exp_map_val_at(x, y);
+            if (map_val > 0) map_val--;
+            exp_map_set_at(x, y, map_val);
+        }
+    }
 }
 
 static inline void exp_map_new_searched_point(float sx, float sy) {
@@ -61,22 +72,39 @@ static inline void exp_map_new_searched_point(float sx, float sy) {
     if (gx < 0 || gx > 15 || gy < 0 || gy > 15) ur_send_line("exp_map_new_searched_point out of bounds error");
 
     int map_val = exp_map_val_at(gx, gy);
-    if (map_val < 0b1111) map_val++;
-    exp_map_set_at(gx, gy, map_val);
+    if (map_val >= 0b1111) {
+        exp_map_dec_all();
+        map_val--;
+    }
+    exp_map_set_at(gx, gy, map_val + 1);
+}
+static inline unsigned int exp_map_get_weighted_point(float sx, float sy) {
+    const int gx = roundf((sx - (x_offset * EXP_MAP_SPACING)) / EXP_MAP_SPACING);
+    const int gy = roundf((sy - (y_offset * EXP_MAP_SPACING)) / EXP_MAP_SPACING); 
+
+    if (gx < 0 || gx > 15 || gy < 0 || gy > 15) ur_send_line("exp_map_get_weighted_point out of bounds error");
+
+    return exp_map_val_at(gx, gy);
+}
+static inline unsigned int exp_map_get_weighted_point_safe(float sx, float sy) {
+    const int gx = roundf((sx - (x_offset * EXP_MAP_SPACING)) / EXP_MAP_SPACING);
+    const int gy = roundf((sy - (y_offset * EXP_MAP_SPACING)) / EXP_MAP_SPACING); 
+
+    if (gx < 0 || gx > 15 || gy < 0 || gy > 15) {
+        return roundf(exp_rand_range(0, 3)); // generally bias to outside the map, this will help us find walls faster
+    }
+
+    return exp_map_val_at(gx, gy);
 }
 
 
 
-
-
-
-// ------------------------------ pathfinding ------------------------------
+// ------------------------------ pathfinding helpers ------------------------------
 #define BOT_RADIUS 160
 #define CLEARANCE_TOLERANCE 10
 
 // returns 1 if point (px,py) is in free space (not colliding with any inflated object)
-static int is_point_free(float px, float py)
-{
+static char is_point_free(float px, float py) {
     int i;
     for (i = 0; i < object_map_c; ++i) {
         const object_positional const *o = &object_map[i];
@@ -95,8 +123,7 @@ static int is_point_free(float px, float py)
 }
 
 // returns 1 if segment AB is collision-free against all inflated objects
-static int segment_clear(float ax, float ay, float bx, float by)
-{
+static char segment_clear(float ax, float ay, float bx, float by) {
     int i;
     float dx = bx - ax;
     float dy = by - ay;
@@ -136,3 +163,45 @@ static int segment_clear(float ax, float ay, float bx, float by)
 
     return 1;
 }
+
+
+// ------------------------------ random point selection ------------------------------
+#define GLOBAL_HALF_SIZE_MM 5000.0f
+#define GLOBAL_MIN_MM (-GLOBAL_HALF_SIZE_MM)
+#define GLOBAL_MAX_MM ( GLOBAL_HALF_SIZE_MM)
+
+typedef struct SamplePoint {
+    int16_t x, y;
+} SamplePoint;
+
+#define SAMPLE_POINT_CNT 64
+static void exp_map_pick_random_point(float * ox, float * oy) {
+    // generate a set of random points to try, should all be not inside of obstacle
+    SamplePoint sample_points[SAMPLE_POINT_CNT];
+    int i;
+    for (i = 0; i < SAMPLE_POINT_CNT; i++) {
+        do {
+            sample_points[i].x = roundf(exp_rand_range(-5000, 5000));
+            sample_points[i].y = roundf(exp_rand_range(-5000, 5000));
+        } while (!is_point_free(sample_points[i].x, sample_points[i].y));
+    }
+
+
+    // find the lowest sample point
+    unsigned int lowest_index = 0;
+    unsigned int lowest_value = exp_map_get_weighted_point_safe(sample_points[0].x, sample_points[0].y);
+
+    for (i = 1; i < SAMPLE_POINT_CNT; i++) {
+        unsigned int value = exp_map_get_weighted_point_safe(sample_points[i].x, sample_points[i].y);
+
+        if (value < lowest_value) {
+            lowest_index = i;
+            lowest_value = value;
+        }
+    }
+
+    *ox = sample_points[lowest_index].x;
+    *oy = sample_points[lowest_index].y;
+}
+
+
