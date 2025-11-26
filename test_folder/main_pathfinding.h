@@ -29,7 +29,7 @@ float distance_to_line(float x1, float y1, float x2, float y2, float x3, float y
     return distance_between(intercept_x, intercept_y, x3, y3);
 }
 
-#define CLEARANCE_TOLERANCE 20
+#define CLEARANCE_TOLERANCE 10
 char point_intercepts_obj(float x, float y) {
     int i;
     for (i = 0; i < object_map_c; i++) {
@@ -105,4 +105,13 @@ void find_valid_approach(float sx, float sy, float tx, float ty, float min_dist,
     *ox = tx;
     *ox = ty;
     return;
+}
+
+
+
+
+// the primary pathfinding algorithm. 
+// returns the next target point to go to based off of the object map, provided position of the bot, and provided target coordinate location
+void path_to(float sx, float sy, float tx, float ty, float * ox, float * oy) {
+
 }
