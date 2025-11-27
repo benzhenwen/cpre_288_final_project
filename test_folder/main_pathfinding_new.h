@@ -212,22 +212,18 @@ static void exp_map_pick_random_point(float * ox, float * oy) {
 #define MAX_CANDIDATES 32
 #define DUPLICATE_EPS2 (25.0f)   // 5 mm squared
 
-static float dist2(float ax, float ay, float bx, float by)
-{
+static float dist2(float ax, float ay, float bx, float by) {
     float dx = bx - ax;
     float dy = by - ay;
     return dx * dx + dy * dy;
 }
 
-static float dist(float ax, float ay, float bx, float by)
-{
+static float dist(float ax, float ay, float bx, float by) {
     return sqrtf(dist2(ax, ay, bx, by));
 }
 
 // Add a candidate waypoint if it's free and not (almost) duplicate.
-static void add_candidate(float x, float y,
-                          float *cand_x, float *cand_y, int *cand_count)
-{
+static void add_candidate(float x, float y, float *cand_x, float *cand_y, int *cand_count) {
     int i;
 
     if (*cand_count >= MAX_CANDIDATES) {
@@ -251,8 +247,7 @@ static void add_candidate(float x, float y,
     (*cand_count)++;
 }
 
-void path_to(float sx, float sy, float tx, float ty, float *ox, float *oy)
-{
+void path_to(float sx, float sy, float tx, float ty, float *ox, float *oy) {
     int i;
     float cand_x[MAX_CANDIDATES];
     float cand_y[MAX_CANDIDATES];
