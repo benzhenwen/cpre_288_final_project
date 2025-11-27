@@ -106,12 +106,3 @@ void find_valid_approach(float sx, float sy, float tx, float ty, float min_dist,
     *ox = ty;
     return;
 }
-
-
-
-
-// the primary pathfinding algorithm. 
-// returns the next target point to go to based off of the object map, provided position of the bot, and provided target coordinate location
-void path_to(float sx, float sy, float tx, float ty, float * ox, float * oy) {
-
-}
