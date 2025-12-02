@@ -125,7 +125,7 @@ void update_object_map() {
             sprintf(buff, "object check removal: %.2f, %.2f", dx, dy);
             ur_send_line(buff);
 
-            if (angle_bearing > -80 && angle_bearing < 80 && dist_bearing < SCAN_MAX_DISTANCE*10) {
+            if (angle_bearing > -70 && angle_bearing < 70 && dist_bearing < SCAN_MAX_DISTANCE*10) {
                 ur_send_line("removing object cos it's a stupid little bitch");
                 remove_object_from_map(i);
                 i--;

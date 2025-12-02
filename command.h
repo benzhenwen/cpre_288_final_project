@@ -14,9 +14,14 @@ typedef struct MoveToCD {
     float apprach_rad;
 } MoveToCD;
 
+typedef struct FunctionPointerCD {
+    void (*function)();
+} FunctionPointerCD;
+
 typedef union CommandData {
     MoveCD move;
     MoveToCD moveTo;
+    FunctionPointerCD functionPointer;
 } CommandData;
 
 

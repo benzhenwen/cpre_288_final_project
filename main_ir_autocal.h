@@ -16,18 +16,19 @@ char auto_cal_end_callback(oi_t * sensor_data) {
     char end_cond = move_end_cond(sensor_data);
 
     if (end_cond) {
-
-
         // collect that point
         int ir_scan;
         do {
             timer_waitMillis(100);
             ir_scan = sc_scan_ir(90);
-        } while (ir_scan < 100 || (ir_auto_cal_step == 0 && ir_scan < 2000));
+
+            char buff[32];
+            sprintf(buff, "(attempt) ir: %d", ir_scan);
+            ur_send_line(buff);
+
+        } while (ir_scan < 100 || (ir_auto_cal_step == 0 && ir_scan < 1000));
 
         float ping_scan = pb_get_dist();
-
-
 
         ir_auto_cal_add_point(ir_scan, ping_scan);
 

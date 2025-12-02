@@ -21,10 +21,11 @@
 // for bot 3: 9750, 39900
 // for bot 5: 8400, 35700
 // for bot 7: 8200, 35900
+// for bot 14: 8550, 37050
 // for bot 17: 7050, 34050
 
-#define CAL_A 8400
-#define CAL_B 35700
+#define CAL_A 8550
+#define CAL_B 37050
 
 
 // cal values local store for ir
@@ -32,10 +33,11 @@
 // for bot 3:
 // for bot 5: 36906.015625, 2.875138
 // for bot 7: 37082.558594, 3.035430
+// for bot 14 9173.001953, 13.982021
 // for bot 17: 14464.520508, 7.239097
 
-#define CAL_IR_A 36906.015625
-#define CAL_IR_B 2.875138
+#define CAL_IR_A 9173.001953
+#define CAL_IR_B 13.982021
 
 
 // ---------------- SCAN DATA ----------------
@@ -46,17 +48,20 @@
 #include "main_objects.h"
 
 
+// ---------------- AUTO MOVE (BUMPER AND CLIFF STUFF) ----------------
+#include "main_auto_move.h"
+
+
 // ---------------- PATHING ALGS ----------------
 #include "main_pathfinding.h"
-
-
-// ---------------- AUTO PATH MOVE ----------------
-#include "main_auto_move.h"
 
 
 // ---------------- IR AUTOCAL ----------------
 #include "main_ir_autocal.h"
 
+
+// ---------------- THIS ONE IS LIKE IMPORTANT I THINK ----------------
+#include "main_explore_movement_routine.h"
 
 
 
@@ -86,7 +91,9 @@ int main(void)
 
 
     // send some inital data
-    send_data_packet(object_map, object_map_c); // update python data packet
+    static unsigned int data_packet_interval_counter = 0;
+    static const unsigned int data_packet_frequency = 5;
+    send_data_packet(object_map, object_map_c, 1); // update python data packet
 
 
     // MAIN LOOP
@@ -107,22 +114,19 @@ int main(void)
             else if (command[0] == 'k') {
                 cq_clear();
                 move_stop();
-                send_data_packet(object_map, object_map_c); // update python data packet
+                send_data_packet(object_map, object_map_c, 1); // update python data packet
             }
             // run a scan
             else if (command[0] == 's') {
                 // object scan
                 perform_scan_and_obj_detection();
-                send_data_packet(object_map, object_map_c); // update python data packet
+                send_data_packet(object_map, object_map_c, 1); // update python data packet
             }
             // start auto mode
-            else if (command[0] == 'a' || command[0] == 'p') {
-                // full auto mode
-                full_auto_flag = command[0] == 'p';
-
+            else if (command[0] == 'a') {
                 // object scan
                 perform_scan_and_obj_detection();
-                send_data_packet(object_map, object_map_c); // update python data packet
+                send_data_packet(object_map, object_map_c, 1); // update python data packet
 
                 // move to smallest
                 int smallest_index = find_smallest_object_index();
@@ -162,7 +166,7 @@ int main(void)
             else if (command[0] == '!') {
                 object_map_c = 0;
                 reset_pos();
-                send_data_packet(object_map, object_map_c); // update python data packet
+                send_data_packet(object_map, object_map_c, 1); // update python data packet
             }
 
             // is a non special command that has a second part
@@ -201,7 +205,15 @@ int main(void)
         cq_update();
         if (cq_size() > 0) {
 //            lcd_printf("(%.1f, %.1f, %.1f)\nqs: %d\n(%.1f, %.1f, %.1f)", get_pos_x(), get_pos_y(), get_pos_r(), cq_size(), get_target_x(), get_target_y(), get_target_r());
-            send_data_packet(object_map, object_map_c); // update python data packet
+            if (++data_packet_interval_counter >= data_packet_frequency) {
+                send_data_packet(object_map, object_map_c, 0); // update python data packet
+                data_packet_interval_counter = 0;
+            }
+        } else {
+            if (data_packet_interval_counter != 0) {
+                send_data_packet(object_map, object_map_c, 0);
+                data_packet_interval_counter = 0;
+            }
         }
 
     }

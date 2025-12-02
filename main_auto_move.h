@@ -11,16 +11,13 @@
 #include <stdint.h>
 
 
-
-char full_auto_flag = 0; // flag that tries to repath on fail
-
 char move_bump_interrupt_callback(oi_t * sensor_data);
 
 #define APPROACH_TOLERANCE 5
 void do_object_scan_and_approach(CommandData * data) {
     perform_scan_and_obj_detection();
     update_object_map();
-    send_data_packet(object_map, object_map_c); // update python data packet
+    send_data_packet(object_map, object_map_c, 1); // update python data packet
 
     // move to smallest
     int smallest_index = find_smallest_object_index();
@@ -41,27 +38,7 @@ char identify_ground_object_interrupt_callback(oi_t * sensor_data) {
     object_map[object_map_c] = (object_positional) { get_pos_x() + tx, get_pos_y() + ty, 65, (char) 0 };
     object_map_c++;
 
-    send_data_packet(object_map, object_map_c); // update python data packet
-
-    if (full_auto_flag) {
-        cq_queue(gen_move_reverse_cmd(300));
-
-        float mid_x;
-        float mid_y;
-        int target_object_map_index = find_smallest_object_index();
-
-        float predicted_start_x = get_pos_x() - cosf(get_pos_r() * (M_PI / 180)) * 300;
-        float predicted_start_y = get_pos_y() - sinf(get_pos_r() * (M_PI / 180)) * 300;
-        find_valid_approach(predicted_start_x, predicted_start_y, object_map[target_object_map_index].x, object_map[target_object_map_index].y, 400, 700, object_map[target_object_map_index].radius, &mid_x, &mid_y);
-
-        // to midpoint and approach
-        cq_queue(gen_move_to_cmd_intr(mid_x, mid_y, &move_bump_interrupt_callback)); // error is bot size + smallest object size
-        cq_queue(gen_approach_cmd_intr(object_map[target_object_map_index].x, object_map[target_object_map_index].y, 400, &move_bump_interrupt_callback)); // error is bot size + smallest object size
-        cq_queue(gen_rotate_to_cmd(atan2f(object_map[target_object_map_index].y - mid_y, object_map[target_object_map_index].x - mid_x) * 180 / M_PI));
-
-        // rescan and go
-        cq_queue((Command) {&do_object_scan_and_approach, &always_true, &always_false, (CommandData) {0} });
-    }
+    send_data_packet(object_map, object_map_c, 1); // update python data packet
 
     return 1;
 }
@@ -70,9 +47,11 @@ char identify_ground_object_interrupt_callback(oi_t * sensor_data) {
 
 // cliff detection
 
-#define BLACK_THRESH 300
-#define WHITE_THRESH_HIGH_TRIGGER 2500
-#define WHITE_THRESH_LOW_TRIGGER 2300
+// white trigger was 2300 2500, black was 300
+
+#define BLACK_THRESH 200
+#define WHITE_THRESH_HIGH_TRIGGER 2600
+#define WHITE_THRESH_LOW_TRIGGER 2500
 
 // cliff type 0: normal, 1: black, 2: white for any of the cliff sensors
 
@@ -117,7 +96,7 @@ char identify_cliff_interrupt_callback_2(oi_t * sensor_data) {
         add_wall_object(get_pos_x() + tx, get_pos_y() + ty, cliff_object_rad);
     }
 
-    send_data_packet(object_map, object_map_c); // update python data packet
+    send_data_packet(object_map, object_map_c, 1); // update python data packet
 
     // move away from the cliff a bit
     cq_queue(gen_rotate_to_cmd(cliff_angle * (180 / M_PI) + 180));

@@ -12,7 +12,7 @@ const int _movement_speed = 180; // 0 - 500
 const int _rotation_speed = 120;
 
 const int _min_movement_speed = 120; // 0 - 500
-const int _min_rotation_speed = 60;
+const int _min_rotation_speed = 25;
 
 float _movement_scaler = 1; // TODO - made modifiable
 float _rotation_scaler = 1.007;
@@ -60,8 +60,8 @@ float calculate_relative_target_r(float r) {
     while (r < 0) r += 360; // get positive
     r = fmod(r, 360); // bound 0-360
 
-    if (pos_r - r > 180) return r + 360;
-    else if (r - pos_r > 180) return r - 360;
+    if ((pos_r - r) > 180) return r + 360;
+    else if ((r - pos_r) > 180) return r - 360;
     else return r;
 }
 
@@ -129,12 +129,14 @@ void update_position_data(oi_t * sensor_data) {
                 target_r_v = calculate_relative_target_r(target_r_v);
             }
 
+            const float move_offset = move_reverse_flag ? -50 : 50;
+
             float move_speed_line = lerp(_min_movement_speed, _movement_speed, MIN(1, dist_from_target / 150));
-            float move_speed_l_w = lerp(move_speed_line - 50, move_speed_line, /**/ MIN(1, -MIN(1, (target_r_v - pos_r) / 2) + 1) /* slow down the left motor when angle offset is positive (rotate cc) */ );
-            float move_speed_r_w = lerp(move_speed_line - 50, move_speed_line, /**/ MIN(1, -MIN(1, (pos_r - target_r_v) / 2) + 1) /* slow down the right motor when angle offset is positive (rotate c) */ );
+            float move_speed_l_w = lerp(move_speed_line - move_offset, move_speed_line, /**/ MIN(1, -MIN(1, (target_r_v - pos_r) / 2) + 1) /* slow down the left motor when angle offset is positive (rotate cc) */ );
+            float move_speed_r_w = lerp(move_speed_line - move_offset, move_speed_line, /**/ MIN(1, -MIN(1, (pos_r - target_r_v) / 2) + 1) /* slow down the right motor when angle offset is positive (rotate c) */ );
 
             if (!move_reverse_flag) oi_setWheels(move_speed_r_w, move_speed_l_w); // move forward
-            else                    oi_setWheels(-move_speed_l_w, -move_speed_r_w); // move backward
+            else                    oi_setWheels(-move_speed_r_w * 0.6, -move_speed_l_w * 0.6); // move backward
         }
     }
     else if (abs(target_r - pos_r) > 0.5 && move_mode_flag == 1) { // aim to rotate in target direction

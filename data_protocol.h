@@ -7,7 +7,7 @@
 // send specialized message over uart that contains robot data for python
 
 // Send the DATA header (no CR/LF), 6 floats (robot+target), objects, then 0x00 sentinel.
-void send_data_packet(object_positional * object_map, int object_map_c) {
+void send_data_packet(object_positional * object_map, int object_map_c, char do_objects) {
     // Header "DATA" (exactly 4 bytes, no newline)
     ur_send_byte('D');
     ur_send_byte('A');
@@ -30,8 +30,14 @@ void send_data_packet(object_positional * object_map, int object_map_c) {
     // the move flag
     ur_send_byte(get_move_mode_flag());
 
+    // send objects or not
+    if (!do_objects) {
+        ur_send_byte((unsigned char) 111);
+        return;
+    }
+
     // Total object count
-    ur_send_byte((char) object_map_c);
+    ur_send_byte((unsigned char) object_map_c);
 
     // objects: for each, send x, y, radius (float32 LE), then type (1 byte)
     int i;
