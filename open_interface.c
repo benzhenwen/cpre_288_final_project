@@ -39,7 +39,7 @@
 #define OI_OPCODE_DRIVE_PWM 146
 #define OI_OPCODE_OUTPUTS 147
 #define OI_OPCODE_STREAM 148
-#define OI_OPCODE_QUERY_LIST 149
+#define OI_OPCODE_QUERY_LIST 149 //IMPORTANT!
 #define OI_OPCODE_DO_STREAM 150
 #define OI_OPCODE_SEND_IR_CHAR 151
 #define OI_OPCODE_SCRIPT 152
@@ -55,6 +55,22 @@
 #define OI_OPCODE_SCHEDULE 167
 #define OI_OPCODE_SCHED_LED 162 // MONDAY THROUGH SUNDAY LEDS
 #define OI_OPCODE_7SEG 163
+
+//Packets
+#define OI_BUMPS_PACKET 7
+
+#define OI_CLIFF_LEFT_SIGNAL 28
+#define OI_CLIFF_FRONT_LEFT_SIGNAL 29
+#define OI_CLIFF_FRONT_RIGHT_SIGNAL 30
+#define OI_CLIFF_RIGHT_SIGNAL 31
+
+#define OI_SONG_NUMBER 36 
+#define OI_SONG_PLAYING 37
+
+#define OI_LEFT_ENCODER_COUNT 43
+#define OI_RIGHT_ENCODER_COUNT 44
+
+#define TOTALPACKETSIZE 15
 
 
 // Contains Packets 7-26
@@ -174,15 +190,27 @@ void oi_close()
 /// Update all sensor and store in oi_t struct
 void oi_update(oi_t *self)
 {
-    uint8_t sensorBuffer[SENSOR_PACKET_SIZE];
+    //int totalPacketSize = 15; //the 9 requested packets are a total of 15 bytes
+    uint8_t sensorBuffer[TOTALPACKETSIZE];
 
     // Query list of sensors
-    oi_uartSendChar(OI_OPCODE_SENSORS);
-    oi_uartSendChar(OI_SENSOR_PACKET_GROUP100);
+    oi_uartSendChar(OI_OPCODE_QUERY_LIST);
+    oi_uartSendChar(9); //9 packets are requested
+    //request each specific packet
+    oi_uartSendChar(OI_BUMPS_PACKET); //sensorBuffer[0]
+    oi_uartSendChar(OI_CLIFF_LEFT_SIGNAL); //sensorBuffer[1] & sensorBuffer[2]
+    oi_uartSendChar(OI_CLIFF_FRONT_LEFT_SIGNAL); //sensorBuffer[3] & sensorBuffer[4]
+    oi_uartSendChar(OI_CLIFF_FRONT_RIGHT_SIGNAL); //sensorBuffer[5] & sensorBuffer[6]
+    oi_uartSendChar(OI_CLIFF_RIGHT_SIGNAL); //sensorBuffer[7] & sensorBuffer[8]
+    oi_uartSendChar(OI_SONG_NUMBER); //sensorBuffer[9]
+    oi_uartSendChar(OI_SONG_PLAYING); //sensorBuffer[10]
+    oi_uartSendChar(OI_LEFT_ENCODER_COUNT); //sensorBuffer[11] & sensorBuffer[12]
+    oi_uartSendChar(OI_RIGHT_ENCODER_COUNT); //sensorBuffer[13] & sensorBuffer[14]
+
 
     // Read all the sensor data
     uint8_t i;
-    for (i = 0; i < SENSOR_PACKET_SIZE; i++) {
+    for (i = 0; i < TOTALPACKETSIZE; i++) {
         // read each sensor byte
         sensorBuffer[i] = oi_uartReceive();
     }
@@ -190,100 +218,100 @@ void oi_update(oi_t *self)
     // Parse the sensor data into the struct
     oi_parsePacket(self, sensorBuffer);
 
-    timer_waitMillis(25); // reduces USART errors that occur when continuously
+    timer_waitMillis(18); // reduces USART errors that occur when continuously
                           // transmitting/receiving min wait time=15ms
 }
 
 void oi_parsePacket(oi_t *self, uint8_t packet[])
 {
-    self->wheelDropLeft = !!(packet[0] & 0x08);
-    self->wheelDropRight = !!(packet[0] & 0x04);
-    self->bumpLeft = !!(packet[0] & 0x02);
-    self->bumpRight = packet[0] & 0x01;
+    // self->wheelDropLeft = !!(packet[0] & 0x08);
+    // self->wheelDropRight = !!(packet[0] & 0x04);
+    self->bumpLeft = !!(packet[0] & 0x02); //bit 1
+    self->bumpRight = packet[0] & 0x01; //bit 0
 
-    self->wallSensor = packet[1];
+    // self->wallSensor = packet[1];
 
-    self->cliffLeft = packet[2];
-    self->cliffFrontLeft = packet[3];
-    self->cliffFrontRight = packet[4];
-    self->cliffRight = packet[5];
+    // self->cliffLeft = packet[2];
+    // self->cliffFrontLeft = packet[3];
+    // self->cliffFrontRight = packet[4];
+    // self->cliffRight = packet[5];
 
-    self->virtualWall = packet[6];
+    // self->virtualWall = packet[6];
 
-    self->overcurrentLeftWheel = !!(packet[7] & 0x10);
-    self->overcurrentRightWheel = !!(packet[7] & 0x08);
-    self->overcurrentMainBrush = !!(packet[7] & 0x04);
-    self->overcurrentSideBrush = packet[7] & 0x01;
+    // self->overcurrentLeftWheel = !!(packet[7] & 0x10);
+    // self->overcurrentRightWheel = !!(packet[7] & 0x08);
+    // self->overcurrentMainBrush = !!(packet[7] & 0x04);
+    // self->overcurrentSideBrush = packet[7] & 0x01;
 
-    self->dirtDetect = packet[8];
+    // self->dirtDetect = packet[8];
 
     // Byte 9 unused
 
-    self->infraredCharOmni = packet[10];
+    // self->infraredCharOmni = packet[10];
 
-    self->buttonClock = !!(packet[11] & 0x80);
-    self->buttonSchedule = !!(packet[11] & 0x40);
-    self->buttonDay = !!(packet[11] & 0x20);
-    self->buttonHour = !!(packet[11] & 0x10);
-    self->buttonMinute = !!(packet[11] & 0x08);
-    self->buttonDock = !!(packet[11] & 0x04);
-    self->buttonSpot = !!(packet[11] & 0x02);
-    self->buttonClean = packet[11] & 0x01;
+    // self->buttonClock = !!(packet[11] & 0x80);
+    // self->buttonSchedule = !!(packet[11] & 0x40);
+    // self->buttonDay = !!(packet[11] & 0x20);
+    // self->buttonHour = !!(packet[11] & 0x10);
+    // self->buttonMinute = !!(packet[11] & 0x08);
+    // self->buttonDock = !!(packet[11] & 0x04);
+    // self->buttonSpot = !!(packet[11] & 0x02);
+    // self->buttonClean = packet[11] & 0x01;
 
-    self->chargingState = packet[16];
-    self->batteryVoltage = oi_parseInt(packet + 17);
-    self->batteryCurrent = oi_parseInt(packet + 19);
-    self->batteryTemperature = packet[21];
-    self->batteryCharge = oi_parseInt(packet + 22);
-    self->batteryCapacity = oi_parseInt(packet + 24);
+    // self->chargingState = packet[16];
+    // self->batteryVoltage = oi_parseInt(packet + 17);
+    // self->batteryCurrent = oi_parseInt(packet + 19);
+    // self->batteryTemperature = packet[21];
+    // self->batteryCharge = oi_parseInt(packet + 22);
+    // self->batteryCapacity = oi_parseInt(packet + 24);
 
-    self->wallSignal = oi_parseInt(packet + 26);
+    // self->wallSignal = oi_parseInt(packet + 26);
 
-    self->cliffLeftSignal = oi_parseInt(packet + 28);
-    self->cliffFrontLeftSignal = oi_parseInt(packet + 30);
-    self->cliffFrontRightSignal = oi_parseInt(packet + 32);
-    self->cliffRightSignal = oi_parseInt(packet + 34);
+    self->cliffLeftSignal = oi_parseInt(packet + 1);
+    self->cliffFrontLeftSignal = oi_parseInt(packet + 3);
+    self->cliffFrontRightSignal = oi_parseInt(packet + 5);
+    self->cliffRightSignal = oi_parseInt(packet + 7);
 
     // Bytes 36-38 unused
 
-    self->chargingSourcesAvailable = packet[39];
-    self->oiMode = packet[40];
+    // self->chargingSourcesAvailable = packet[39];
+    // self->oiMode = packet[40];
 
-    self->songNumber = packet[41];
-    self->songPlaying = packet[42];
+    self->songNumber = packet[9];
+    self->songPlaying = packet[10];
 
-    self->numberOfStreamPackets = packet[43];
+    // self->numberOfStreamPackets = packet[43];
 
-    self->requestedVelocity = oi_parseInt(packet + 44);
-    self->requestedRadius = oi_parseInt(packet + 46);
-    self->requestedRightVelocity = oi_parseInt(packet + 48);
-    self->requestedLeftVelocity = oi_parseInt(packet + 50);
-    self->leftEncoderCount = oi_parseInt(packet + 52);
-    self->rightEncoderCount = oi_parseInt(packet + 54);
+    // self->requestedVelocity = oi_parseInt(packet + 44);
+    // self->requestedRadius = oi_parseInt(packet + 46);
+    // self->requestedRightVelocity = oi_parseInt(packet + 48);
+    // self->requestedLeftVelocity = oi_parseInt(packet + 50);
+    self->leftEncoderCount = oi_parseInt(packet + 11);
+    self->rightEncoderCount = oi_parseInt(packet + 13);
 
-    self->lightBumperRight = !!(packet[56] & 0x20);
-    self->lightBumperFrontRight = !!(packet[56] & 0x10);
-    self->lightBumperCenterRight = !!(packet[56] & 0x08);
-    self->lightBumperCenterLeft = !!(packet[56] & 0x04);
-    self->lightBumperFrontLeft = !!(packet[56] & 0x02);
-    self->lightBumperLeft = packet[56] & 0x01;
+    // self->lightBumperRight = !!(packet[56] & 0x20);
+    // self->lightBumperFrontRight = !!(packet[56] & 0x10);
+    // self->lightBumperCenterRight = !!(packet[56] & 0x08);
+    // self->lightBumperCenterLeft = !!(packet[56] & 0x04);
+    // self->lightBumperFrontLeft = !!(packet[56] & 0x02);
+    // self->lightBumperLeft = packet[56] & 0x01;
 
-    self->lightBumpLeftSignal = oi_parseInt(packet + 57);
-    self->lightBumpFrontLeftSignal = oi_parseInt(packet + 59);
-    self->lightBumpCenterLeftSignal = oi_parseInt(packet + 61);
-    self->lightBumpCenterRightSignal = oi_parseInt(packet + 63);
-    self->lightBumpFrontRightSignal = oi_parseInt(packet + 65);
-    self->lightBumpRightSignal = oi_parseInt(packet + 67);
+    // self->lightBumpLeftSignal = oi_parseInt(packet + 57);
+    // self->lightBumpFrontLeftSignal = oi_parseInt(packet + 59);
+    // self->lightBumpCenterLeftSignal = oi_parseInt(packet + 61);
+    // self->lightBumpCenterRightSignal = oi_parseInt(packet + 63);
+    // self->lightBumpFrontRightSignal = oi_parseInt(packet + 65);
+    // self->lightBumpRightSignal = oi_parseInt(packet + 67);
 
-    self->infraredCharLeft = packet[69];
-    self->infraredCharRight = packet[70];
+    // self->infraredCharLeft = packet[69];
+    // self->infraredCharRight = packet[70];
 
-    self->leftMotorCurrent = oi_parseInt(packet + 71);
-    self->rightMotorCurrent = oi_parseInt(packet + 73);
-    self->mainBrushMotorCurrent = oi_parseInt(packet + 75);
-    self->sideBrushMotorCurrent = oi_parseInt(packet + 77);
+    // self->leftMotorCurrent = oi_parseInt(packet + 71);
+    // self->rightMotorCurrent = oi_parseInt(packet + 73);
+    // self->mainBrushMotorCurrent = oi_parseInt(packet + 75);
+    // self->sideBrushMotorCurrent = oi_parseInt(packet + 77);
 
-    self->stasis = packet[79];
+    // self->stasis = packet[79];
 
     self->distance = oi_getDistance(self);
     self->angle = oi_getDegrees(self);

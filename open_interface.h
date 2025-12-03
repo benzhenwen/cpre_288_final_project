@@ -37,95 +37,95 @@
 /// iRobot Create Sensor Data
 typedef struct {
 	//Boolean sensor values
-	uint32_t wheelDropLeft : 1;
-	uint32_t wheelDropRight : 1;
-	uint32_t bumpLeft : 1;
-	uint32_t bumpRight : 1;
-	uint32_t cliffLeft : 1;
-	uint32_t cliffFrontLeft : 1;
-	uint32_t cliffFrontRight : 1;
-	uint32_t cliffRight : 1;
+	// uint32_t wheelDropLeft : 1; //
+	// uint32_t wheelDropRight : 1;
+	uint32_t bumpLeft : 1; //keep
+	uint32_t bumpRight : 1; //keep
+	// uint32_t cliffLeft : 1; //keep cliff stuff?
+	// uint32_t cliffFrontLeft : 1;
+	// uint32_t cliffFrontRight : 1;
+	// uint32_t cliffRight : 1;
 
-	uint32_t lightBumperRight : 1;
-	uint32_t lightBumperFrontRight : 1;
-	uint32_t lightBumperCenterRight : 1;
-	uint32_t lightBumperCenterLeft : 1;
-	uint32_t lightBumperFrontLeft : 1;
-	uint32_t lightBumperLeft : 1;
+	// uint32_t lightBumperRight : 1; //not sure if we'll need these
+	// uint32_t lightBumperFrontRight : 1;
+	// uint32_t lightBumperCenterRight : 1;
+	// uint32_t lightBumperCenterLeft : 1;
+	// uint32_t lightBumperFrontLeft : 1;
+	// uint32_t lightBumperLeft : 1;
 
-	uint32_t wallSensor : 1;
-	uint32_t virtualWall : 1;
+	// uint32_t wallSensor : 1; //probably don't need these
+	// uint32_t virtualWall : 1;
 
-	uint32_t overcurrentLeftWheel : 1;
-	uint32_t overcurrentRightWheel : 1;
-	uint32_t overcurrentMainBrush : 1;
-	uint32_t overcurrentSideBrush : 1;
+	// uint32_t overcurrentLeftWheel : 1; //very likely won't need these
+	// uint32_t overcurrentRightWheel : 1;
+	// uint32_t overcurrentMainBrush : 1;
+	// uint32_t overcurrentSideBrush : 1;
 
-	uint32_t buttonClock : 1;
-	uint32_t buttonSchedule : 1;
-	uint32_t buttonDay : 1;
-	uint32_t buttonHour : 1;
-	uint32_t buttonMinute : 1;
-	uint32_t buttonDock : 1;
-	uint32_t buttonSpot : 1;
-	uint32_t buttonClean : 1;
+	// uint32_t buttonClock : 1; //remove all of these
+	// uint32_t buttonSchedule : 1;
+	// uint32_t buttonDay : 1;
+	// uint32_t buttonHour : 1;
+	// uint32_t buttonMinute : 1;
+	// uint32_t buttonDock : 1;
+	// uint32_t buttonSpot : 1;
+	// uint32_t buttonClean : 1;
 
 	//Cliff sensors
-	uint16_t cliffLeftSignal;
+	uint16_t cliffLeftSignal; //using these
 	uint16_t cliffFrontLeftSignal;
 	uint16_t cliffFrontRightSignal;
 	uint16_t cliffRightSignal;
 
 	//Light bump sensors
-	uint16_t lightBumpLeftSignal;
-	uint16_t lightBumpFrontLeftSignal;
-	uint16_t lightBumpCenterLeftSignal;
-	uint16_t lightBumpCenterRightSignal;
-	uint16_t lightBumpFrontRightSignal;
-	uint16_t lightBumpRightSignal;
+	// uint16_t lightBumpLeftSignal; //not currently using these
+	// uint16_t lightBumpFrontLeftSignal;
+	// uint16_t lightBumpCenterLeftSignal;
+	// uint16_t lightBumpCenterRightSignal;
+	// uint16_t lightBumpFrontRightSignal;
+	// uint16_t lightBumpRightSignal;
 
 	//Misc sensors
-	uint16_t wallSignal;
-	uint8_t dirtDetect;
+	// uint16_t wallSignal; //don't need these two
+	// uint8_t dirtDetect; //toss
 
 	//Power
-	int16_t leftMotorCurrent;
-	int16_t rightMotorCurrent;
-	int16_t mainBrushMotorCurrent;
-	int16_t sideBrushMotorCurrent;
+	// int16_t leftMotorCurrent; //don't need these
+	// int16_t rightMotorCurrent;
+	// int16_t mainBrushMotorCurrent;
+	// int16_t sideBrushMotorCurrent;
 
 	//Motion sensors
 	double distance;
 	double angle;
-	int8_t requestedVelocity;
-	int8_t requestedRadius;
-	int16_t requestedRightVelocity;
-	int16_t requestedLeftVelocity;
+	// int8_t requestedVelocity;
+	// int8_t requestedRadius;
+	// int16_t requestedRightVelocity;
+	// int16_t requestedLeftVelocity;
 	int16_t leftEncoderCount;        
 	int16_t rightEncoderCount;		  
 
 	//Information from the infrared beacon sensors
-	char infraredCharOmni;
-	char infraredCharLeft;
-	char infraredCharRight;
+	// char infraredCharOmni; //probably don't need these
+	// char infraredCharLeft;
+	// char infraredCharRight;
 
 	//Battery information
-	uint8_t chargingState;
-	uint8_t chargingSourcesAvailable;
-	uint16_t batteryVoltage;
-	int16_t batteryCurrent;
-	uint8_t batteryTemperature;
-	uint16_t batteryCharge;
-	uint16_t batteryCapacity;
+	// uint8_t chargingState; //probably don't need these
+	// uint8_t chargingSourcesAvailable;
+	// uint16_t batteryVoltage;
+	// int16_t batteryCurrent;
+	// uint8_t batteryTemperature;
+	// uint16_t batteryCharge;
+	// uint16_t batteryCapacity;
 
 	//Music
 	uint8_t songNumber;
 	uint8_t songPlaying;
 
 	//Misc
-	uint8_t oiMode;
-	uint8_t numberOfStreamPackets;
-	uint8_t stasis;
+	// uint8_t oiMode;
+	// uint8_t numberOfStreamPackets;
+	// uint8_t stasis;
 
 } oi_t;
 
