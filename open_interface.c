@@ -70,6 +70,8 @@
 #define OI_LEFT_ENCODER_COUNT 43
 #define OI_RIGHT_ENCODER_COUNT 44
 
+#define TOTALPACKETSIZE 15
+
 
 // Contains Packets 7-26
 #define OI_SENSOR_PACKET_GROUP0 0
@@ -188,8 +190,8 @@ void oi_close()
 /// Update all sensor and store in oi_t struct
 void oi_update(oi_t *self)
 {
-    int totalPacketSize = 15; //the 9 requested packets are a total of 15 bytes
-    uint8_t sensorBuffer[totalPacketSize];
+    //int totalPacketSize = 15; //the 9 requested packets are a total of 15 bytes
+    uint8_t sensorBuffer[TOTALPACKETSIZE];
 
     // Query list of sensors
     oi_uartSendChar(OI_OPCODE_QUERY_LIST);
@@ -208,7 +210,7 @@ void oi_update(oi_t *self)
 
     // Read all the sensor data
     uint8_t i;
-    for (i = 0; i < totalPacketSize; i++) {
+    for (i = 0; i < TOTALPACKETSIZE; i++) {
         // read each sensor byte
         sensorBuffer[i] = oi_uartReceive();
     }
