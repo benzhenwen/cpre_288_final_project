@@ -23,12 +23,14 @@ float _rotation_scaler = 1.007;
 inline float lerp(float a, float b, float f) {
     return a * (1.0 - f) + (b * f);
 }
-inline float dist(float a, float b) {
-    return sqrt(a*a + b*b);
+inline float dist2(float ax, float ay, float bx, float by) {
+    float dx = bx - ax;
+    float dy = by - ay;
+    return dx * dx + dy * dy;
 }
-#define MAX(x, y) (((x) > (y)) ? (x) : (y))
-#define MIN(x, y) (((x) < (y)) ? (x) : (y))
-
+inline float dist(float ax, float ay, float bx, float by) {
+    return sqrtf(dist2(ax, ay, bx, by));
+}
 
 float pos_x = 0;
 float pos_y = 0;
@@ -100,7 +102,7 @@ void update_position_data(oi_t * sensor_data) {
     // movement
     done_moving_flag = 0;
 
-    float dist_from_target = dist(pos_x - target_x, pos_y - target_y) - apprach_distance_offset;
+    float dist_from_target = dist(pos_x, pos_y, target_x, target_y) - apprach_distance_offset;
     if (dist_from_target > 5 && move_mode_flag == 0) {
         float target_r_m = atan2(target_y - pos_y, target_x - pos_x) * 180 / M_PI; // rad to deg, to target
         if (move_reverse_flag) target_r_m += 180;
@@ -136,7 +138,7 @@ void update_position_data(oi_t * sensor_data) {
             float move_speed_r_w = lerp(move_speed_line - move_offset, move_speed_line, /**/ MIN(1, -MIN(1, (pos_r - target_r_v) / 2) + 1) /* slow down the right motor when angle offset is positive (rotate c) */ );
 
             if (!move_reverse_flag) oi_setWheels(move_speed_r_w, move_speed_l_w); // move forward
-            else                    oi_setWheels(-move_speed_r_w * 0.6, -move_speed_l_w * 0.6); // move backward
+            else                    oi_setWheels(-move_speed_r_w * 0.75, -move_speed_l_w * 0.75); // move backward
         }
     }
     else if (abs(target_r - pos_r) > 0.5 && move_mode_flag == 1) { // aim to rotate in target direction

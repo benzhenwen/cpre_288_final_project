@@ -18,7 +18,7 @@ void perform_scan_and_obj_detection() {
     sc_sweep_ir(data);
 
     sc_clean_scan(data, SCAN_BUFFER_SIZE);
-    sc_print_sweep(data, SCAN_BUFFER_SIZE);
+//    sc_print_sweep(data, SCAN_BUFFER_SIZE);
 
     // convert to objects
     sc_find_objects(data, SCAN_BUFFER_SIZE, SCAN_MAX_DISTANCE, 4, objects, &objects_c);
@@ -37,10 +37,12 @@ void perform_scan_and_obj_detection() {
     sc_calc_size_objects(objects, objects_c);
 
     // print out the objects
-    sc_print_objects(objects, objects_c);
+//    sc_print_objects(objects, objects_c);
 
     // updates the object map
     update_object_map();
+
+    send_data_packet(object_map, object_map_c, 1); // update python data packet
 }
 
 int find_smallest_object_index() {
@@ -89,7 +91,7 @@ void add_wall_object(float x, float y, float r) {
         if (object_map[i].type == 3) {
 
             if (dist_bearing < r) {
-                ur_send_line("removing border cos it's a stupid little bitch");
+//                ur_send_line("removing border cos it's a stupid little bitch");
                 remove_object_from_map(i);
                 i--;
             }
@@ -121,12 +123,12 @@ void update_object_map() {
             if (angle_bearing >  180) angle_bearing -= 360;
             if (angle_bearing < -180) angle_bearing += 360;
 
-            char buff[32];
-            sprintf(buff, "object check removal: %.2f, %.2f", dx, dy);
-            ur_send_line(buff);
+//            char buff[32];
+//            sprintf(buff, "object check removal: %.2f, %.2f", dx, dy);
+//            ur_send_line(buff);
 
-            if (angle_bearing > -70 && angle_bearing < 70 && dist_bearing < SCAN_MAX_DISTANCE*10) {
-                ur_send_line("removing object cos it's a stupid little bitch");
+            if (angle_bearing > -60 && angle_bearing < 60 && dist_bearing < SCAN_MAX_DISTANCE*10) {
+//                ur_send_line("removing object cos it's a stupid little bitch");
                 remove_object_from_map(i);
                 i--;
             }

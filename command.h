@@ -61,6 +61,9 @@ void cq_oi_free();
 // add a command to the queue, returns -1 if overflow
 int cq_queue(Command com);
 
+// adds a command to the front of the queue to be handled next, returns -1 if overflow
+int cq_queue_front(Command com);
+
 // get the queue size
 int cq_size();
 

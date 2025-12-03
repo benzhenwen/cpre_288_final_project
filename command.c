@@ -46,6 +46,30 @@ int cq_queue(Command com) {
     return queue_size;
 }
 
+int cq_queue_front(Command com) {
+    if (queue_size >= COMMAND_QUEUE_SIZE) return -1; // queue is full
+
+    int i = queue_write_index;
+    while (i != queue_top_index) {
+        command_queue[i] = command_queue[(i - 1 < 0) ? (COMMAND_QUEUE_SIZE - 1) : (i - 1)];
+        i--;
+        if (i < 0) i = COMMAND_QUEUE_SIZE - 1;
+    }
+
+    if (command_active) {
+        // place the command at next, we are assuming cq_queue_front is being called only once at the tail end of a interrupt callback
+        // this prevents the about to end command from being shifted one and causing it to be repeatedly called
+        command_queue[(queue_top_index + 1 >= COMMAND_QUEUE_SIZE) ? 0 : (queue_top_index + 1)] = com;
+    }
+    else command_queue[queue_top_index] = com; // normal behavior, place at front
+
+    queue_write_index++;
+    if (queue_write_index >= COMMAND_QUEUE_SIZE) queue_write_index = 0;
+    queue_size++;
+
+    return queue_size;
+}
+
 // get the queue size
 int cq_size() {
     return queue_size;

@@ -43,7 +43,14 @@ void move_stop(); // stop moving
 char move_end_cond(oi_t * sensor_data); // the end condition for the command
 
 
+// external export util
+#define MAX(x, y) (((x) > (y)) ? (x) : (y))
+#define MIN(x, y) (((x) < (y)) ? (x) : (y))
 
+float calculate_relative_target_r(float r);
+inline float lerp(float a, float b, float f);
+inline float dist2(float ax, float ay, float bx, float by);
+inline float dist(float ax, float ay, float bx, float by);
 
 
 // returns a command that will make the robot go forward some distance, works with negative values

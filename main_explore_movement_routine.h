@@ -23,6 +23,7 @@
 void explore_queue_start();
 void explore_loop_scan();
 void explore_loop_path();
+void update_weighted_map();
 
 
 
@@ -41,16 +42,80 @@ void explore_loop_scan() {
     cq_queue(gen_invoke_function_cmd(&explore_loop_path));
 }
 
+static float mx, my; // the point the bot has been instructed to move to
+static float tx, ty; // the chosen target point (can be far away)
+char attempt_persist_point = 0;
 void explore_loop_path() {
-    // pick a random point to go to
-    float tx, ty; // the chosen target point
-    exp_map_pick_random_point(&tx, &ty);
+    // the start point
+    const float sx = get_pos_x();
+    const float sy = get_pos_y();
 
-    // attempt to path to that point
-    float mx, my; // the point the bot has been instructed to move to
-    path_to(get_target_x(), get_target_y(), tx, ty, &mx, &my);
+    // pick a new random point to go to and try to path
+    do {
+        if (!attempt_persist_point) { // let one attempt go by first to persist tx and ty
+            // pick a random point to go to
+            exp_map_pick_random_point(&tx, &ty);
+        }
 
-    // move just a little to that point, or turn to face the correct direction.
-    // if move >0.5m or rotate >50deg, only move .5m or turn respectively, then request a new scan
-    // TODO
+//        char buff[64];
+//        sprintf(buff, "attempting path point: (%.0f, %.0f)", tx, ty);
+//        ur_send_line(buff);
+
+        // attempt to path to that point
+        path_to(sx, sy, tx, ty, &mx, &my);
+
+//        sprintf(buff, "attempting mid point: (%.0f, %.0f)", tx, ty);
+//        ur_send_line(buff);
+
+        // we just tried that point, if it was a turn only before we skipped generating a point, but we need to next cycle
+        attempt_persist_point = 0;
+
+        // attempt while the target point is not valid
+    } while (sx == mx && sy == my);
+
+    char buff[128];
+    sprintf(buff, "attempting to go to: (%.0f, %.0f) mp: (%.0f, %.0f)", tx, ty, mx, my);
+    ur_send_line(buff);
+
+
+    // get the angle bearing to that point
+    const float target_angle_bearing = calculate_relative_target_r(atan2f(my - sy, mx - sx) * (180 / M_PI));
+
+    // exclusively turn if we are rotating more than 55 degrees
+    if (abs(target_angle_bearing - get_pos_r()) > 55) {
+        cq_queue(gen_rotate_to_cmd(target_angle_bearing));
+    }
+    // else we move some distance in that direction
+    else {
+        // the distance we travel is the min of the distance of our target point, or 300mm
+        const float dest_dist = dist(sx, sy, mx, my);
+        const float move_dist = MIN(300.0f, dest_dist);
+
+        if (dest_dist == 0) {
+            ur_send_line("dest dist 0 error");
+        }
+
+        // calculate the real destination point
+        const float dex = lerp(sx, mx, move_dist/dest_dist);
+        const float dey = lerp(sy, my, move_dist/dest_dist);
+
+        sprintf(buff, "picking point: (%.0f, %.0f)", dex, dey);
+        ur_send_line(buff);
+
+        // try to go there!
+        cq_queue(gen_move_to_cmd_intr(dex, dey, &move_bump_interrupt_callback));
+
+        // update the weighted map after a successful movement
+        cq_queue(gen_invoke_function_cmd(&update_weighted_map));
+    }
+
+    attempt_persist_point = 1;
+
+    // restart the loop!
+    cq_queue(gen_invoke_function_cmd(&explore_loop_scan));
+
+}
+
+void update_weighted_map() {
+    exp_map_new_searched_point(get_pos_x(), get_pos_y());
 }

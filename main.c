@@ -19,25 +19,26 @@
 
 // for bot 1: 7050, 35100
 // for bot 3: 9750, 39900
+// for bot 4: 7950, 34650
 // for bot 5: 8400, 35700
 // for bot 7: 8200, 35900
 // for bot 14: 8550, 37050
 // for bot 17: 7050, 34050
 
-#define CAL_A 8550
-#define CAL_B 37050
+#define CAL_A 7950
+#define CAL_B 34650
 
 
 // cal values local store for ir
 // for bot 1: 41034.980469, 0.011351
-// for bot 3:
+// for bot 3: 33288.324219, 2.903766
 // for bot 5: 36906.015625, 2.875138
 // for bot 7: 37082.558594, 3.035430
 // for bot 14 9173.001953, 13.982021
 // for bot 17: 14464.520508, 7.239097
 
-#define CAL_IR_A 9173.001953
-#define CAL_IR_B 13.982021
+#define CAL_IR_A 33288.324219
+#define CAL_IR_B 2.903766
 
 
 // ---------------- SCAN DATA ----------------
@@ -120,20 +121,15 @@ int main(void)
             else if (command[0] == 's') {
                 // object scan
                 perform_scan_and_obj_detection();
-                send_data_packet(object_map, object_map_c, 1); // update python data packet
             }
             // start auto mode
             else if (command[0] == 'a') {
-                // object scan
-                perform_scan_and_obj_detection();
-                send_data_packet(object_map, object_map_c, 1); // update python data packet
-
-                // move to smallest
-                int smallest_index = find_smallest_object_index();
-                if (smallest_index != -1) {
-                    // error is bot size + smallest object size
-                    cq_queue(gen_approach_cmd_intr(object_map[smallest_index].x, object_map[smallest_index].y, 160 + (object_map[smallest_index].radius), &move_bump_interrupt_callback));
-                }
+                // start!
+                explore_queue_start();
+            }
+            else if (command[0] == 'p') {
+                // start no start movement
+                explore_loop_scan();
             }
             else if (command[0] == 'c') { // servo cal
                 sv_cal();
@@ -167,6 +163,13 @@ int main(void)
                 object_map_c = 0;
                 reset_pos();
                 send_data_packet(object_map, object_map_c, 1); // update python data packet
+            }
+            else if (command[0] == '#') { // a test
+                cq_queue(gen_move_cmd(100)); // 3
+                cq_queue(gen_rotate_cmd(45)); // 4
+                cq_queue_front(gen_rotate_cmd(90)); // 2
+                cq_queue_front(gen_move_cmd(200)); // 1
+                cq_queue(gen_move_cmd(100)); // 5
             }
 
             // is a non special command that has a second part

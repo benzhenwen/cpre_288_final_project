@@ -70,12 +70,13 @@ ALL_BUTTONS = [
     Button("oi_free", "e"),
     Button("stop", "k"),
     Button("scan", "s"),
+    Button("full start", "a"),
+    Button("basic auto", "p"),
     Button("servo cal", "c"),
     Button("ir cal", "i"),
-    Button("basic auto", "a"),
-    Button("Path auto", "p"),
     Button("reverse", "r100"),
-    Button("align turn", "t0")
+    Button("align turn", "t0"),
+    Button("test", "#")
 ]
 
 
@@ -537,22 +538,23 @@ class CyBotClient:
             count_byte = self._recv_exact(1)
             obj_count = count_byte[0]
 
-            if obj_count > 64:
-                # Bail out of this packet to avoid desync.
-                raise ValueError(f"Protocol error: object_count={obj_count} (>16)")
+            if obj_count != 111:
+                if obj_count > 64:
+                    # Bail out of this packet to avoid desync.
+                    raise ValueError(f"Protocol error: object_count={obj_count} (>16)")
 
-            # Read the whole objects region in a single call
-            block = self._recv_exact(obj_count * 13)
+                # Read the whole objects region in a single call
+                block = self._recv_exact(obj_count * 13)
 
-            # Parse objects
-            objects: List[Object2D] = []
-            offset = 0
-            for _ in range(obj_count):
-                rec = block[offset:offset+13]
-                x, y, r = struct.unpack("<fff", rec[:12])
-                type_obj = rec[12]
-                objects.append(Object2D(x_mm=x, y_mm=y, r_mm=r, t=type_obj))
-                offset += 13
+                # Parse objects
+                objects: List[Object2D] = []
+                offset = 0
+                for _ in range(obj_count):
+                    rec = block[offset:offset+13]
+                    x, y, r = struct.unpack("<fff", rec[:12])
+                    type_obj = rec[12]
+                    objects.append(Object2D(x_mm=x, y_mm=y, r_mm=r, t=type_obj))
+                    offset += 13
 
             # Commit to shared state
             with self.lock:
@@ -564,7 +566,8 @@ class CyBotClient:
                 self.state.target_r_deg = tgt_r
                 self.state.move_mode_flag = mmf_v
                 self.state.apprach_distance_offset = tgt_apr_dist
-                self.state.objects = objects
+                if obj_count != 111:
+                    self.state.objects = objects
                 self.state.updated_at = time.time()
 
             # print(f"\n[data] robot=({pos_x:.1f},{pos_y:.1f},{pos_r:.1f}°)  "

@@ -13,19 +13,20 @@
 
 char move_bump_interrupt_callback(oi_t * sensor_data);
 
-#define APPROACH_TOLERANCE 5
-void do_object_scan_and_approach(CommandData * data) {
-    perform_scan_and_obj_detection();
-    update_object_map();
-    send_data_packet(object_map, object_map_c, 1); // update python data packet
-
-    // move to smallest
-    int smallest_index = find_smallest_object_index();
-    if (smallest_index != -1) {
-        // error is bot size + smallest object size
-        cq_queue(gen_approach_cmd_intr(object_map[smallest_index].x, object_map[smallest_index].y, 160 + APPROACH_TOLERANCE + (object_map[smallest_index].radius), &move_bump_interrupt_callback));
-    }
-}
+//#define APPROACH_TOLERANCE 5
+//void do_object_scan_and_approach(CommandData * data) {
+//    perform_scan_and_obj_detection();
+//    update_object_map();
+//    send_data_packet(object_map, object_map_c, 1); // update python data packet
+//
+//    // move to smallest
+//    int smallest_index = find_smallest_object_index();
+//    if (smallest_index != -1) {
+//        // error is bot size + smallest object size
+//        cq_queue_front(gen_move_cmd(80));
+//        (gen_approach_cmd_intr(object_map[smallest_index].x, object_map[smallest_index].y, 160 + APPROACH_TOLERANCE + (object_map[smallest_index].radius), &move_bump_interrupt_callback));
+//    }
+//}
 
 char identify_ground_object_interrupt_callback(oi_t * sensor_data) {
     if (!(sensor_data->bumpLeft && sensor_data->bumpRight)) return 0;
@@ -39,6 +40,8 @@ char identify_ground_object_interrupt_callback(oi_t * sensor_data) {
     object_map_c++;
 
     send_data_packet(object_map, object_map_c, 1); // update python data packet
+
+    cq_queue_front(gen_move_reverse_cmd(50));
 
     return 1;
 }
@@ -99,8 +102,8 @@ char identify_cliff_interrupt_callback_2(oi_t * sensor_data) {
     send_data_packet(object_map, object_map_c, 1); // update python data packet
 
     // move away from the cliff a bit
-    cq_queue(gen_rotate_to_cmd(cliff_angle * (180 / M_PI) + 180));
-    cq_queue(gen_move_cmd(80));
+    cq_queue_front(gen_move_cmd(80));
+    cq_queue_front(gen_rotate_to_cmd(cliff_angle * (180 / M_PI) + 180));
 
     return 1;
 }
@@ -121,7 +124,7 @@ char identify_cliff_interrupt_callback(oi_t * sensor_data) {
     cliff_detect_angle_a = get_pos_r();
 
     // keep rotating
-    cq_queue(gen_rotate_cmd_intr(cliff_turn_direction, &identify_cliff_interrupt_callback_2));
+    cq_queue_front(gen_rotate_cmd_intr(cliff_turn_direction, &identify_cliff_interrupt_callback_2));
 
     return 1;
 }
@@ -157,7 +160,7 @@ char move_bump_interrupt_callback(oi_t * sensor_data) {
     // bump handling
     if (is_bump) {
         ur_send_line("bump");
-        cq_queue(gen_rotate_cmd_intr(sensor_data->bumpRight ? -90 : 90, &identify_ground_object_interrupt_callback));
+        cq_queue_front(gen_rotate_cmd_intr(sensor_data->bumpRight ? -90 : 90, &identify_ground_object_interrupt_callback));
     }
     else if (is_cliff) {
         if      (l_f)  cliff_type = l_f;
@@ -167,13 +170,14 @@ char move_bump_interrupt_callback(oi_t * sensor_data) {
 
         ur_send_line("cliff");
         cliff_turn_direction = (r_f || fr_f) ? -90 : 90;
+        if (fr_f || fl_f) cliff_turn_direction = -90;
+
+        cq_queue_front(gen_rotate_cmd_intr(cliff_turn_direction, &identify_cliff_interrupt_callback));
 
         if (fr_f || fl_f) {
-            cq_queue(gen_rotate_cmd(75)); // if both sensors are triggered, rotate a bit to prime the routine
-            cliff_turn_direction = -90;
+            // note this command is done first
+            cq_queue_front(gen_rotate_cmd(75)); // if both sensors are triggered, rotate a bit to prime the routine
         }
-
-        cq_queue(gen_rotate_cmd_intr(cliff_turn_direction, &identify_cliff_interrupt_callback));
     }
 
     return 1;

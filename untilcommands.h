@@ -9,7 +9,7 @@ void invoke_function_cmd_start_callback(CommandData * data) {
     data->functionPointer.function();
 }
 
-inline Command gen_invoke_function_cmd(void (*f)()) {
+Command gen_invoke_function_cmd(void (*f)()) {
     CommandData cd;
     cd.functionPointer = (FunctionPointerCD) {f};
 
