@@ -77,7 +77,7 @@ ALL_BUTTONS = [
     Button("ir cal", "i"),
     Button("reverse", "r100"),
     Button("align turn", "t0"),
-    Button("test", "#")
+    Button("success", "v")
 ]
 
 
@@ -121,15 +121,16 @@ class MapRenderer:
         self.font = pygame.font.SysFont("consolas", 14)
 
     def to_screen(self, x_mm: float, y_mm: float):
+
         # World (mm): origin center; +x right, +y up
         # Screen: origin top-left; +x right, +y down
-        sx = int((x_mm + self.FIELD_HALF_MM) * self.scale)
+        sx = int(((x_mm - 0) + self.FIELD_HALF_MM) * self.scale)
         sy = int((self.FIELD_HALF_MM - y_mm) * self.scale)
         return sx, sy
 
     def screen_to_world_mm(self, sx: int, sy: int):
         # Inverse of to_screen(): sx = (x + H) * scale; sy = (H - y) * scale
-        x_mm = (sx / self.scale) - self.FIELD_HALF_MM
+        x_mm = (sx / self.scale) - self.FIELD_HALF_MM + 0
         y_mm = self.FIELD_HALF_MM - (sy / self.scale)
         return x_mm, y_mm
 
@@ -152,7 +153,7 @@ class MapRenderer:
         self.screen.fill(self.bg)
         # minor grid every 1 m, major every 5 m
         step_mm = 1000
-        for d in range(-self.FIELD_HALF_MM, self.FIELD_HALF_MM + 1, step_mm):
+        for d in range(-self.FIELD_HALF_MM, self.FIELD_HALF_MM * 2 + 1, step_mm):
             # vertical lines (x = d)
             x, _ = self.to_screen(d, 0)
             pygame.draw.line(self.screen, self.grid, (x, 0), (x, self.H), 1)

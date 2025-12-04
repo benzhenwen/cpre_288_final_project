@@ -44,11 +44,12 @@ void ir_init_fuck() {
     ADC0_ACTSS_R |= 0x1;
 }
 
-
+// read a current ir sample
 int ir_read_sample_fuck() {
     return ADC0_SSFIFO0_R & 0x0FFF;
 }
 
+// reads 16 ir values and returns the lowest
 int ir_floor_sample() {
     int min_value = ir_read_sample_fuck();
 

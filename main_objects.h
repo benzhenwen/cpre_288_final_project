@@ -7,7 +7,7 @@
 
 void update_object_map();
 
-
+// scans, converts to objects, re-pings for accurate distances, and adds them to the map. updates python data packet
 void perform_scan_and_obj_detection() {
     objects_c = 0;
 
@@ -45,6 +45,7 @@ void perform_scan_and_obj_detection() {
     send_data_packet(object_map, object_map_c, 1); // update python data packet
 }
 
+// unused. finds the smallest radius object in object_map
 int find_smallest_object_index() {
     if (object_map_c == 0) {
         ur_send_line("Warning: tried calling find_smallest_object_index with no objects detected");
@@ -67,7 +68,7 @@ int find_smallest_object_index() {
 
 
 
-// object map stuff
+// removes object from the object_map and decrements object_map_c
 void remove_object_from_map(int index) {
     int i;
     for (i = index; i < object_map_c - 1; i++) {
@@ -76,6 +77,7 @@ void remove_object_from_map(int index) {
     object_map_c--;
 }
 
+// special function for adding walls that detects for duplicate walls and removes the old
 void add_wall_object(float x, float y, float r) {
     // remove all now irrelevant walls
     int i;
@@ -103,6 +105,8 @@ void add_wall_object(float x, float y, float r) {
     object_map_c++;
 }
 
+// take the data from objects array and applies it to object_map using robot relative position
+// also removes duplicate-scanned objects in front of it
 void update_object_map() {
 
     // remove all now irrelevant objects
@@ -125,7 +129,7 @@ void update_object_map() {
             float relative_x = cosf(angle_bearing * (M_PI / 180)) * dist_bearing;
 
             // remove objects that are "in front", ie positive x, plus a bit of margin, up to a radial distance
-            if (dist_bearing <= (SCAN_MAX_DISTANCE * 10) && (relative_x - object_map[i].radius > 10)) {
+            if (dist_bearing < 150 || (dist_bearing <= (SCAN_MAX_DISTANCE * 10) && (relative_x - object_map[i].radius > 50))) {
                 remove_object_from_map(i);
                 i--;
             }

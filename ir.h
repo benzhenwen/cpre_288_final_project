@@ -26,6 +26,7 @@ typedef struct Curve {
     float b;
 } Curve;
 
+// automatically calculates the curve values based off of previous calls to ir_auto_cal_add_point()
 Curve ir_auto_cal_calculate();
 
 // set A and k based off of the autocal

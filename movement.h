@@ -9,15 +9,20 @@ float get_pos_x();
 float get_pos_y();
 float get_pos_r();
 
+// reset position and target to 0, 0, 0
 void reset_pos();
 
+// get the bot's target position
 float get_target_x();
 float get_target_y();
 float get_target_r();
 
+// access the move mode of the bot, 0 is move and 1 is rotate
 char get_move_mode_flag();
+// the approach distance
 float get_target_apprach_distance_offset();
 
+// the main loop call. updates the encoded position of the robot based off of sensor data and tries to move to target pos if not already there
 void update_position_data(oi_t * sensor_data);
 
 // ---------- util ------------
@@ -51,7 +56,3 @@ float calculate_relative_target_r(float r);
 inline float lerp(float a, float b, float f);
 inline float dist2(float ax, float ay, float bx, float by);
 inline float dist(float ax, float ay, float bx, float by);
-
-
-// returns a command that will make the robot go forward some distance, works with negative values
-inline Command gen_move_cmd(float distance);

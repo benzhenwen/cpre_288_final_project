@@ -28,6 +28,7 @@ char move_bump_interrupt_callback(oi_t * sensor_data);
 //    }
 //}
 
+// callback after a bump that does a turning routine to wait for both bumpers to hit, then adds the bumped object to the map
 char identify_ground_object_interrupt_callback(oi_t * sensor_data) {
     if (!(sensor_data->bumpLeft && sensor_data->bumpRight)) return 0;
 
@@ -49,12 +50,9 @@ char identify_ground_object_interrupt_callback(oi_t * sensor_data) {
 
 
 // cliff detection
-
-// white trigger was 2300 2500, black was 300
-
-#define BLACK_THRESH 200
-#define WHITE_THRESH_HIGH_TRIGGER 2350
-#define WHITE_THRESH_LOW_TRIGGER 2200
+#define BLACK_THRESH 200 // ir blow this for a hole
+#define WHITE_THRESH_HIGH_TRIGGER 2700 // ir above this to start detection of an edge
+#define WHITE_THRESH_LOW_TRIGGER 2580 // ir below this to end detection of an edge
 
 // cliff type 0: normal, 1: black, 2: white for any of the cliff sensors
 
@@ -102,7 +100,7 @@ char identify_cliff_interrupt_callback_2(oi_t * sensor_data) {
     send_data_packet(object_map, object_map_c, 1); // update python data packet
 
     // move away from the cliff a bit
-    cq_queue_front(gen_move_cmd(80));
+    cq_queue_front(gen_move_cmd(50));
     cq_queue_front(gen_rotate_to_cmd(cliff_angle * (180 / M_PI) + 180));
 
     return 1;
@@ -170,14 +168,14 @@ char move_bump_interrupt_callback(oi_t * sensor_data) {
 
         ur_send_line("cliff");
         cliff_turn_direction = (r_f || fr_f) ? -90 : 90;
-        if (fr_f || fl_f) cliff_turn_direction = -90;
+        if (fr_f)      cliff_turn_direction = -90;
+        else if (fl_f) cliff_turn_direction = 90;
 
         cq_queue_front(gen_rotate_cmd_intr(cliff_turn_direction, &identify_cliff_interrupt_callback));
 
-        if (fr_f || fl_f) {
-            // note this command is done first
-            cq_queue_front(gen_rotate_cmd(75)); // if both sensors are triggered, rotate a bit to prime the routine
-        }
+        if (fr_f)      cq_queue_front(gen_rotate_cmd(60)); //
+        else if (fl_f) cq_queue_front(gen_rotate_cmd(-60)); //
+
     }
 
     return 1;

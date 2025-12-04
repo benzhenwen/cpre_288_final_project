@@ -9,8 +9,8 @@ void sv_set_width(uint32_t width_ticks);
 // sets the servo angle, blocking delay included until servo is predicted to be in place
 void sv_set_angle(int angle);
 
-// blocking calibration routine
+// blocking calibration routine, see lcd for instructions
 void sv_cal();
 
-// cal known
+// set the calibration values directly
 void sv_set_cal_known(uint32_t min_val, uint32_t max_val);

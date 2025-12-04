@@ -19,9 +19,9 @@ typedef struct FunctionPointerCD {
 } FunctionPointerCD;
 
 typedef union CommandData {
-    MoveCD move;
-    MoveToCD moveTo;
-    FunctionPointerCD functionPointer;
+    MoveCD move; // a basic move distance
+    MoveToCD moveTo; // a move to point
+    FunctionPointerCD functionPointer; // a function pointer to call, of type void(), noargs
 } CommandData;
 
 

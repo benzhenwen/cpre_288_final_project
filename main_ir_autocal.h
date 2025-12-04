@@ -12,6 +12,8 @@
 // step 0 is at 10cm, step 1 at 15cm, step 2 at 20cm, etc... step 8
 int ir_auto_cal_step = 0;
 
+// ir autocal self-queueing sequence. collects ir and ping points at different distances
+// calls ir_auto_cal_add_point() for each datapoint before printing the output of ir_auto_cal_calculate()
 char auto_cal_end_callback(oi_t * sensor_data) {
     char end_cond = move_end_cond(sensor_data);
 

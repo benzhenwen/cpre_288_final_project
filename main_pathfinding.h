@@ -57,6 +57,7 @@ static void exp_map_dec_all() {
     }
 }
 
+// increase the nearest weight on the map by 1 given the robot's position
 static inline void exp_map_new_searched_point(float sx, float sy) {
     // shift the map as needed
     while (sx < x_offset * EXP_MAP_SPACING) {
@@ -79,6 +80,8 @@ static inline void exp_map_new_searched_point(float sx, float sy) {
     }
     exp_map_set_at(gx, gy, map_val + 1);
 }
+
+// get a weighted point on the map from bot position
 static inline unsigned int exp_map_get_weighted_point(float sx, float sy) {
     const int gx = roundf((sx - (x_offset * EXP_MAP_SPACING)) / EXP_MAP_SPACING);
     const int gy = roundf((sy - (y_offset * EXP_MAP_SPACING)) / EXP_MAP_SPACING);
@@ -87,6 +90,8 @@ static inline unsigned int exp_map_get_weighted_point(float sx, float sy) {
 
     return exp_map_val_at(gx, gy);
 }
+
+// get a weighted point on the map from bot position, ensures safe out-of-bounds behavior
 static inline unsigned int exp_map_get_weighted_point_safe(float sx, float sy) {
     const int gx = roundf((sx - (x_offset * EXP_MAP_SPACING)) / EXP_MAP_SPACING);
     const int gy = roundf((sy - (y_offset * EXP_MAP_SPACING)) / EXP_MAP_SPACING);
@@ -101,6 +106,7 @@ static inline unsigned int exp_map_get_weighted_point_safe(float sx, float sy) {
 
 
 // ------------------------------ pathfinding helpers ------------------------------
+// the radius of the bot and the space between objects we want to maintain, accounting for error in some cases
 #define BOT_RADIUS 160
 #define CLEARANCE_TOLERANCE 30
 
@@ -185,6 +191,8 @@ typedef struct SamplePoint {
 } SamplePoint;
 
 #define SAMPLE_POINT_CNT 64
+
+// selects a random valid xy point -5000 to 5000, prioritizes low values in the exp_map (ie, lesser explored points)
 static void exp_map_pick_random_point(float * ox, float * oy) {
     // generate a set of random points to try, should all be not inside of obstacle
     SamplePoint sample_points[SAMPLE_POINT_CNT];
@@ -250,6 +258,11 @@ static void add_candidate(float x, float y, float *cand_x, float *cand_y, int *c
     (*cand_count)++;
 }
 
+// S - W1 - W2 - E path finding algorithm based off of candidate points around objects
+// ox, oy are return values
+// returns sx, sy if no valid path found
+// returns tx, ty if the valid path is completely clear
+// returns W1 (the first waypoint to go to in the path) otherwise
 void path_to(float sx, float sy, float tx, float ty, float *ox, float *oy) {
     int i;
     float cand_x[MAX_CANDIDATES];

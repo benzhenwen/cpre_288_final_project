@@ -4,7 +4,15 @@
 
 #include "movement.h"
 
-// gen move command
+// -------------------------------- a header file containing function definitions for creating movement commands -------------------------------------
+/*
+ * each gen has a _intr variant, allowing you to set the interrupt condition
+ * default behavior for interrupts is always_false
+ * see command.h for more details
+ */
+
+
+// move bot forward
 inline Command gen_move_cmd_intr(float distance, char (*interrupt_condition)(oi_t * sensor_data)) {
     CommandData cd;
     cd.move = (MoveCD) {distance};

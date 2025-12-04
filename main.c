@@ -11,6 +11,7 @@
 #include "ir.h"
 #include "ping.h"
 #include "servo.h"
+#include "sound.h"
 
 
 
@@ -18,28 +19,36 @@
 
 
 // for bot 1: 7050, 35100
+// for bot 2: 6750, 35100
 // for bot 3: 9750, 39900
 // for bot 4: 7950, 34650
 // for bot 5: 8400, 35700
 // for bot 7: 8200, 35900
+// for bot 8: 8550, 36000
 // for bot 14: 8550, 37050
+// for bot 15: 8325, 36975
 // for bot 17: 7050, 34050
+// for bot 22:
 
-#define CAL_A 8200
-#define CAL_B 35900
+#define CAL_A 8550
+#define CAL_B 37050
 
 
 // cal values local store for ir
 // for bot 1: 41034.980469, 0.011351
+// for bot 2: 36310.523438, 3.288532
 // for bot 3: 33288.324219, 2.903766
-// for bot 4: 33560.593750, 1.616726
+// for bot 4: 32777.847656, 2.805384
 // for bot 5: 36906.015625, 2.875138
 // for bot 7: 37082.558594, 3.035430
-// for bot 14: 9173.001953, 13.982021
+// for bot 8: 30945.720703, 6.030509
+// for bot 14: 8761.989258, 14.191058
+// for bot 15: 134531.625000, -66.301292
 // for bot 17: 14464.520508, 7.239097
+// for bot 22:
 
-#define CAL_IR_A 37082.558594
-#define CAL_IR_B 3.035430
+#define CAL_IR_A 8761.989258
+#define CAL_IR_B 14.191058
 
 
 // ---------------- SCAN DATA ----------------
@@ -71,15 +80,18 @@
 
 
 
-
+// this is a thing
 int main(void)
 {
+
+    // a lot of inits
     timer_init();
     lcd_init();
     cq_oi_init();
     ur_init();
     ur_inter_init();
 
+    sound_init();
 
     pn_init();
     ir_init_fuck();
@@ -87,14 +99,16 @@ int main(void)
     sv_init();
     sv_set_cal_known(CAL_A, CAL_B);
 
+
     lcd_printf("meow");
 
     ur_send_line("-------------start--------------");
 
 
-    // send some inital data
     static unsigned int data_packet_interval_counter = 0;
     static const unsigned int data_packet_frequency = 5;
+
+    // send some inital data
     send_data_packet(object_map, object_map_c, 1); // update python data packet
 
 
@@ -135,6 +149,10 @@ int main(void)
             }
             else if (command[0] == 'g') { // just move forward one grid distance, no special checks
                 cq_queue(gen_move_cmd(TILE_SIZE_MM));
+                cq_queue(gen_invoke_function_cmd(&sound_success));
+            }
+            else if (command[0] == 'v') {
+                sound_success();
             }
             else if (command[0] == 'c') { // servo cal
                 sv_cal();
@@ -212,7 +230,6 @@ int main(void)
         // standard main loop call, update commands
         cq_update();
         if (cq_size() > 0) {
-            lcd_printf("meow\nqueue length: %d", cq_size());
             if (++data_packet_interval_counter >= data_packet_frequency) {
                 send_data_packet(object_map, object_map_c, 0); // update python data packet
                 data_packet_interval_counter = 0;
@@ -223,6 +240,7 @@ int main(void)
                 data_packet_interval_counter = 0;
             }
         }
+        lcd_printf("meow\nqueue length: %d", cq_size());
 
     }
 

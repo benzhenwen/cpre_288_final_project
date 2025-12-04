@@ -2,13 +2,12 @@
 
 #include "command.h"
 
-// gen a command that just calls a function
-
-
+// callback that just calls the function pointer stored in the command data
 void invoke_function_cmd_start_callback(CommandData * data) {
     data->functionPointer.function();
 }
 
+// creates a command that calls a specified function pointer on start and immediately completes
 Command gen_invoke_function_cmd(void (*f)()) {
     CommandData cd;
     cd.functionPointer = (FunctionPointerCD) {f};
