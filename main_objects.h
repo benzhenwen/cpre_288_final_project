@@ -117,21 +117,22 @@ void update_object_map() {
 
         // tall objects disappear when we re-scan over their cone
         if (object_map[i].type == 1) {
+
             // calculate bearing and distance from robot
-
             float angle_bearing = atan2f(dy, dx) * (180 / M_PI) - get_pos_r();
-            if (angle_bearing >  180) angle_bearing -= 360;
-            if (angle_bearing < -180) angle_bearing += 360;
 
-//            char buff[32];
-//            sprintf(buff, "object check removal: %.2f, %.2f", dx, dy);
-//            ur_send_line(buff);
+            // find how "in front" it is
+            float relative_x = cosf(angle_bearing * (M_PI / 180)) * dist_bearing;
 
-            if (angle_bearing > -60 && angle_bearing < 60 && dist_bearing < SCAN_MAX_DISTANCE*10) {
-//                ur_send_line("removing object cos it's a stupid little bitch");
+            // remove objects that are "in front", ie positive x, plus a bit of margin, up to a radial distance
+            if (dist_bearing <= (SCAN_MAX_DISTANCE * 10) && (relative_x - object_map[i].radius > 10)) {
                 remove_object_from_map(i);
                 i--;
             }
+
+//            char buff[128];
+//            sprintf(buff, "object index %d: (%.2f, %.2f) -> %.2f", i, dist_bearing, angle_bearing, relative_x);
+//            ur_send_line(buff);
         }
     }
 

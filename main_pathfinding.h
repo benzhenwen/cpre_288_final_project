@@ -102,7 +102,14 @@ static inline unsigned int exp_map_get_weighted_point_safe(float sx, float sy) {
 
 // ------------------------------ pathfinding helpers ------------------------------
 #define BOT_RADIUS 160
-#define CLEARANCE_TOLERANCE 10
+#define CLEARANCE_TOLERANCE 30
+
+// returns if the object at index is brushed up against an object, defined as dist < BOT_RADIUS + CLEARANCE_TOLERANCE
+static inline char is_object_brushing_bot(int index) {
+    const object_positional *o = &object_map[index];
+    const float distance = dist(o->x, o->y, get_pos_x(), get_pos_y());
+    return distance < BOT_RADIUS + CLEARANCE_TOLERANCE;
+}
 
 // returns 1 if point (px,py) is in free space (not colliding with any inflated object)
 static char is_point_free(float px, float py) {
@@ -110,7 +117,9 @@ static char is_point_free(float px, float py) {
     for (i = 0; i < object_map_c; ++i) {
         const object_positional *o = &object_map[i];
 
-        float r = o->radius + BOT_RADIUS + CLEARANCE_TOLERANCE;
+        // duplicated on segment_clear, we do not consider the tolerance when too nearby an object for the sake of pathfinding
+        float r = o->radius + BOT_RADIUS + (is_object_brushing_bot(i) ? 0 : CLEARANCE_TOLERANCE);
+
         float dx = px - o->x;
         float dy = py - o->y;
         float d2 = dx * dx + dy * dy;
@@ -138,7 +147,7 @@ static char segment_clear(float ax, float ay, float bx, float by) {
     for (i = 0; i < object_map_c; ++i) {
         const object_positional *o = &object_map[i];
 
-        float r = o->radius + BOT_RADIUS + CLEARANCE_TOLERANCE;
+        float r = o->radius + BOT_RADIUS + (is_object_brushing_bot(i) ? 0 : CLEARANCE_TOLERANCE);
 
         // Vector from circle center to segment start
         float fx = ax - o->x;
@@ -210,7 +219,7 @@ static void exp_map_pick_random_point(float * ox, float * oy) {
 
 
 // ------------------------------ main pathfinding algorithm ------------------------------
-#define MAX_CANDIDATES 32
+#define MAX_CANDIDATES 64
 #define DUPLICATE_EPS2 (25.0f)   // 5 mm squared
 
 
@@ -220,6 +229,7 @@ static void add_candidate(float x, float y, float *cand_x, float *cand_y, int *c
     int i;
 
     if (*cand_count >= MAX_CANDIDATES) {
+        ur_send_line("MAX_CANDIDATES overflow in add_candidate");
         return;
     }
 

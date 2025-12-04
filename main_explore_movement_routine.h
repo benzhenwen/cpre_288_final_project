@@ -51,7 +51,15 @@ void explore_loop_path() {
     const float sy = get_pos_y();
 
     // pick a new random point to go to and try to path
+    unsigned int attept_counter = 0;
     do {
+        if (attept_counter++ > 256) {
+            ur_send_line("path finding attempts >256 failed, auto aborting");
+            move_stop();
+            cq_clear();
+            return;
+        }
+
         if (!attempt_persist_point) { // let one attempt go by first to persist tx and ty
             // pick a random point to go to
             exp_map_pick_random_point(&tx, &ty);
@@ -70,8 +78,8 @@ void explore_loop_path() {
         // we just tried that point, if it was a turn only before we skipped generating a point, but we need to next cycle
         attempt_persist_point = 0;
 
-        // attempt while the target point is not valid
-    } while (sx == mx && sy == my);
+        // attempt while the target point is not within 50mm (also invalid pathfinding returns 0 distance)
+    } while (dist(sx, sy, mx, my) < 50);
 
     char buff[128];
     sprintf(buff, "attempting to go to: (%.0f, %.0f) mp: (%.0f, %.0f)", tx, ty, mx, my);
@@ -83,11 +91,13 @@ void explore_loop_path() {
 
     // exclusively turn if we are rotating more than 55 degrees
     if (abs(target_angle_bearing - get_pos_r()) > 55) {
+        ur_send_line("rotating to face point");
+
         cq_queue(gen_rotate_to_cmd(target_angle_bearing));
     }
     // else we move some distance in that direction
     else {
-        // the distance we travel is the min of the distance of our target point, or 300mm
+        // the distance we travel is the min of the distance of our target point, or some small distance
         const float dest_dist = dist(sx, sy, mx, my);
         const float move_dist = MIN(300.0f, dest_dist);
 
@@ -99,20 +109,26 @@ void explore_loop_path() {
         const float dex = lerp(sx, mx, move_dist/dest_dist);
         const float dey = lerp(sy, my, move_dist/dest_dist);
 
-        sprintf(buff, "picking point: (%.0f, %.0f)", dex, dey);
+        sprintf(buff, "driving to: (%.0f, %.0f)", dex, dey);
         ur_send_line(buff);
 
         // try to go there!
         cq_queue(gen_move_to_cmd_intr(dex, dey, &move_bump_interrupt_callback));
 
+        ur_send_line("cp A");
+
         // update the weighted map after a successful movement
         cq_queue(gen_invoke_function_cmd(&update_weighted_map));
+
+        ur_send_line("cp B");
     }
 
     attempt_persist_point = 1;
 
     // restart the loop!
     cq_queue(gen_invoke_function_cmd(&explore_loop_scan));
+
+    ur_send_line("cp C");
 
 }
 

@@ -53,8 +53,8 @@ char identify_ground_object_interrupt_callback(oi_t * sensor_data) {
 // white trigger was 2300 2500, black was 300
 
 #define BLACK_THRESH 200
-#define WHITE_THRESH_HIGH_TRIGGER 2600
-#define WHITE_THRESH_LOW_TRIGGER 2500
+#define WHITE_THRESH_HIGH_TRIGGER 2350
+#define WHITE_THRESH_LOW_TRIGGER 2200
 
 // cliff type 0: normal, 1: black, 2: white for any of the cliff sensors
 
@@ -87,7 +87,7 @@ char identify_cliff_interrupt_callback_2(oi_t * sensor_data) {
     if (cliff_detect_angle_a + 180 < cliff_detect_angle_b) cliff_detect_angle_a += 360;
     float cliff_angle = ((cliff_detect_angle_a + cliff_detect_angle_b) / 2) * (M_PI / 180);
 
-    const float cliff_object_rad = (cliff_type == 1) ? 100.0f : 262144.0f; // still maintaining about 0.05 float resolution while being large. DO RESEARCH BEFORE CHANGING THIS VALUE!!
+    const float cliff_object_rad = (cliff_type == 1) ? 100.0f : 32768.0f;
 
     const float tx = cosf(cliff_angle) * (cliff_object_rad + 160);
     const float ty = sinf(cliff_angle) * (cliff_object_rad + 160);

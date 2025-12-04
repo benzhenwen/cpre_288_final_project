@@ -25,20 +25,21 @@
 // for bot 14: 8550, 37050
 // for bot 17: 7050, 34050
 
-#define CAL_A 7950
-#define CAL_B 34650
+#define CAL_A 8200
+#define CAL_B 35900
 
 
 // cal values local store for ir
 // for bot 1: 41034.980469, 0.011351
 // for bot 3: 33288.324219, 2.903766
+// for bot 4: 33560.593750, 1.616726
 // for bot 5: 36906.015625, 2.875138
 // for bot 7: 37082.558594, 3.035430
-// for bot 14 9173.001953, 13.982021
+// for bot 14: 9173.001953, 13.982021
 // for bot 17: 14464.520508, 7.239097
 
-#define CAL_IR_A 33288.324219
-#define CAL_IR_B 2.903766
+#define CAL_IR_A 37082.558594
+#define CAL_IR_B 3.035430
 
 
 // ---------------- SCAN DATA ----------------
@@ -119,6 +120,7 @@ int main(void)
             }
             // run a scan
             else if (command[0] == 's') {
+                //
                 // object scan
                 perform_scan_and_obj_detection();
             }
@@ -130,6 +132,9 @@ int main(void)
             else if (command[0] == 'p') {
                 // start no start movement
                 explore_loop_scan();
+            }
+            else if (command[0] == 'g') { // just move forward one grid distance, no special checks
+                cq_queue(gen_move_cmd(TILE_SIZE_MM));
             }
             else if (command[0] == 'c') { // servo cal
                 sv_cal();
@@ -207,7 +212,7 @@ int main(void)
         // standard main loop call, update commands
         cq_update();
         if (cq_size() > 0) {
-//            lcd_printf("(%.1f, %.1f, %.1f)\nqs: %d\n(%.1f, %.1f, %.1f)", get_pos_x(), get_pos_y(), get_pos_r(), cq_size(), get_target_x(), get_target_y(), get_target_r());
+            lcd_printf("meow\nqueue length: %d", cq_size());
             if (++data_packet_interval_counter >= data_packet_frequency) {
                 send_data_packet(object_map, object_map_c, 0); // update python data packet
                 data_packet_interval_counter = 0;

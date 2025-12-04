@@ -70,6 +70,7 @@ ALL_BUTTONS = [
     Button("oi_free", "e"),
     Button("stop", "k"),
     Button("scan", "s"),
+    Button("tile step", "g"),
     Button("full start", "a"),
     Button("basic auto", "p"),
     Button("servo cal", "c"),
