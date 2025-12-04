@@ -12,7 +12,8 @@
  * Open Interface
  *
  *  Created on: Mar 3, 2016
- *      Author: Noah Bergman, Eric Middleton, dmlarson
+ *      Original Version Author: Noah Bergman, Eric Middleton, dmlarson
+ *      Final Project 2025 Modifications: Eleena Rath
  */
 
 #include "open_interface.h"
@@ -56,20 +57,27 @@
 #define OI_OPCODE_SCHED_LED 162 // MONDAY THROUGH SUNDAY LEDS
 #define OI_OPCODE_7SEG 163
 
-//Packets
+//Packets for Final Project
+//This is the "Bumps and Wheel Drops" packet. For this project, only the bumps are needed
+//bumps return 0 or 1
 #define OI_BUMPS_PACKET 7
 
+//All cliff signals, returns values 0-4095
 #define OI_CLIFF_LEFT_SIGNAL 28
 #define OI_CLIFF_FRONT_LEFT_SIGNAL 29
 #define OI_CLIFF_FRONT_RIGHT_SIGNAL 30
 #define OI_CLIFF_RIGHT_SIGNAL 31
 
+//Song number in bot, up to 4 songs can be specified. Variable can return 0-4
 #define OI_SONG_NUMBER 36 
+//0 = OI song not playing, 1 = OI song currently playing
 #define OI_SONG_PLAYING 37
 
+//Encoder counts, used to calculate distance and degrees
 #define OI_LEFT_ENCODER_COUNT 43
 #define OI_RIGHT_ENCODER_COUNT 44
 
+//All current packets add up to 15 bytes
 #define TOTALPACKETSIZE 15
 
 
@@ -187,6 +195,14 @@ void oi_close()
     oi_uartSendChar(OI_OPCODE_STOP);
 }
 
+/*
+    Modified by: Eleena Rath
+    Changes:
+        -Instead of requesting all packets from the robot (80 bytes), only 9 packets are requested
+        -Uses the Query List command (Opcode: 149) instead of the Sensors command (Opcode: 142)
+        -Reduction in wait time after parsing packets
+
+*/
 /// Update all sensor and store in oi_t struct
 void oi_update(oi_t *self)
 {
@@ -218,10 +234,17 @@ void oi_update(oi_t *self)
     // Parse the sensor data into the struct
     oi_parsePacket(self, sensorBuffer);
 
+    // Modification: changed timer wait time from 25 to 18 milliseconds
     timer_waitMillis(18); // reduces USART errors that occur when continuously
                           // transmitting/receiving min wait time=15ms
 }
 
+/*
+    Modified By: Eleena Rath
+    Changes:
+        -Commented out all unnecessary packts
+        -Adjusted the packet parsing logic
+*/
 void oi_parsePacket(oi_t *self, uint8_t packet[])
 {
     // self->wheelDropLeft = !!(packet[0] & 0x08);
