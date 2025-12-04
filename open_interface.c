@@ -234,8 +234,7 @@ void oi_update(oi_t *self)
     // Parse the sensor data into the struct
     oi_parsePacket(self, sensorBuffer);
 
-    // Modification: changed timer wait time from 25 to 18 milliseconds
-    timer_waitMillis(18); // reduces USART errors that occur when continuously
+    timer_waitMillis(25); // reduces USART errors that occur when continuously
                           // transmitting/receiving min wait time=15ms
 }
 
@@ -676,4 +675,5 @@ double oi_getMotorCalibrationLeft(void) { return motor_cal_factor_L; }
  * @return double right motor calibration factor
  */
 double oi_getMotorCalibrationRight(void) { return motor_cal_factor_R; }
+
 
