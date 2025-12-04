@@ -125,7 +125,7 @@ void update_object_map() {
             float relative_x = cosf(angle_bearing * (M_PI / 180)) * dist_bearing;
 
             // remove objects that are "in front", ie positive x, plus a bit of margin, up to a radial distance
-            if (dist_bearing <= (SCAN_MAX_DISTANCE * 10) && (relative_x - object_map[i].radius > 10)) {
+            if (dist_bearing < 150 || (dist_bearing <= (SCAN_MAX_DISTANCE * 10) && (relative_x - object_map[i].radius > 15))) {
                 remove_object_from_map(i);
                 i--;
             }

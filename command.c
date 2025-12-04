@@ -3,6 +3,8 @@
 
 #include "movement.h"
 
+#include "uart.h"
+
 
 // ----------------------------- core projet - sensor data -----------------------------
 oi_t * sensor_data;
@@ -117,6 +119,8 @@ void cq_update() {
         command_active = 1;
 
         cmd->on_start(&cmd->data); // start the command
+
+        ur_send_line("command started");
     }
 
     // process already running command
@@ -124,6 +128,8 @@ void cq_update() {
         if(cmd->is_complete(sensor_data) || cmd->is_interrupt(sensor_data)) { // if the command is complete, move to the next command
             cq_next();
             command_active = 0;
+
+            ur_send_line("command ended");
         }
     }
 

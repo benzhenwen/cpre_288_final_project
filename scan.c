@@ -10,6 +10,7 @@
 #include "ir.h"
 #include "ping.h"
 #include "servo.h"
+#include "sound.h"
 
 
 
@@ -31,7 +32,22 @@ void sc_sweep_sound(float output[180 / SCAN_RESOLUTION + 1]) {
 
 float sc_scan_sound(int angle) {
     sc_point_servo(angle);
-    return pb_get_dist();
+
+
+//    float a = pb_get_dist();
+//    float b = pb_get_dist();
+//    float c = pb_get_dist();
+//
+//    if (b < a < c || c < a < b) return a;
+//    if (a < b < c || c < b < a) return b;
+//    return c;
+
+    volatile float dist = pb_get_dist();
+
+    // make a silly sound
+    sound_beep();
+
+    return dist;
 }
 
 // sweep scan with ir sensor, 2 deg increment. populates int array of minimum length 91 with RAW VALUES.
@@ -171,9 +187,6 @@ void sc_print_objects(object_radial * objects, int objects_c) {
 void sc_reping_objects(object_radial * objects, int objects_c) {
     int i;
     for (i = 0; i < objects_c; i++) {
-
-        // point
-        sc_point_servo(objects[i].angle);
 
         // get accurate distance measurement
         float dist = sc_scan_sound(objects[i].angle);

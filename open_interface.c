@@ -4,7 +4,7 @@
  *  Created on: Mar 11, 2016
  *      Author: nbergman
  *  Updated on: Aug 22, 2019
- *		Author: Isaac Rex
+ *      Author: Isaac Rex
  */
 
 
@@ -64,7 +64,7 @@
 #define OI_CLIFF_FRONT_RIGHT_SIGNAL 30
 #define OI_CLIFF_RIGHT_SIGNAL 31
 
-#define OI_SONG_NUMBER 36 
+#define OI_SONG_NUMBER 36
 #define OI_SONG_PLAYING 37
 
 #define OI_LEFT_ENCODER_COUNT 43
@@ -105,30 +105,30 @@ float motor_cal_factor_R = 1.00;
 /// internal function
 void oi_init_noupdate(void);
 
-///	\brief Initialize UART3 for OI Communication and Debugging
-///	internal function
+/// \brief Initialize UART3 for OI Communication and Debugging
+/// internal function
 void oi_uartInit(void);
 
 /// Set baud to 115200
 void oi_uartFastMode(void);
 
 /// transmit character
-///	internal function
+/// internal function
 void oi_uartSendChar(char data);
 
 /// transmit character array
-///	internal function
+/// internal function
 void uart_sendStr(const char *theData);
 
 /// Receive from UART
-///	internal function
+/// internal function
 char oi_uartReceive(void);
 
 /// Parse data from iRobot into oi_t struct
 void oi_parsePacket(oi_t *self, uint8_t packet[]);
 
 /// Send large data set from array
-///	internal function
+/// internal function
 void oi_uartSendBuff(const uint8_t theData[], uint8_t theSize);
 
 /// Helper function to convert big-endian integer from pointer into little
@@ -139,7 +139,7 @@ int16_t oi_parseInt(uint8_t *theInt);
 /// Allocate and clear all memory for OI Struct
 oi_t *oi_alloc()
 {
-	return calloc(1, sizeof(oi_t));
+    return calloc(1, sizeof(oi_t));
 }
 
 
@@ -383,7 +383,7 @@ void oi_play_song(int index) {
 void go_charge(void) {
     char charging_state = 0;
 
-    /*	//Calling demo that will cause Create to seek out home base
+    /*  //Calling demo that will cause Create to seek out home base
    oi_uartSendChar(OI_OPCODE_MAX);
    oi_uartSendChar(0x01);
 
@@ -397,8 +397,8 @@ void go_charge(void) {
    */
 }
 
-///	\brief Initialize UART3 for OI Communication and Debugging
-///	internal function
+/// \brief Initialize UART3 for OI Communication and Debugging
+/// internal function
 void oi_uartInit(void)
 {
     // Calculated Baudrate for 115200;
@@ -430,7 +430,7 @@ void oi_uartInit(void)
 }
 
 /// transmit character
-///	internal function
+/// internal function
 void oi_uartSendChar(char data)
 {
     while ((UART4_FR_R & UART_FR_TXFF) != 0); // holds until no data in transmit buffer
@@ -653,4 +653,3 @@ double oi_getMotorCalibrationLeft(void) { return motor_cal_factor_L; }
  * @return double right motor calibration factor
  */
 double oi_getMotorCalibrationRight(void) { return motor_cal_factor_R; }
-

@@ -30,11 +30,14 @@ void update_weighted_map();
 
 // queues the starting command - to enter the filed (and reset position data)
 void explore_queue_start() {
+    sound_startup();
     cq_queue(gen_move_cmd(TILE_SIZE_MM)); // move into the main tile
     cq_queue(gen_invoke_function_cmd(&explore_loop_scan)); // start the main loop
 }
 
 void explore_loop_scan() {
+    ur_send_line("explore loop scan start");
+
     // perform a scan and update the object map
     cq_queue(gen_invoke_function_cmd(&perform_scan_and_obj_detection));
 
@@ -42,10 +45,12 @@ void explore_loop_scan() {
     cq_queue(gen_invoke_function_cmd(&explore_loop_path));
 }
 
-static float mx, my; // the point the bot has been instructed to move to
-static float tx, ty; // the chosen target point (can be far away)
+static float mx = 0, my = 0; // the point the bot has been instructed to move to
+static float tx = 0, ty = 0; // the chosen target point (can be far away)
 char attempt_persist_point = 0;
 void explore_loop_path() {
+    ur_send_line("path finding start");
+
     // the start point
     const float sx = get_pos_x();
     const float sy = get_pos_y();
@@ -81,8 +86,8 @@ void explore_loop_path() {
         // attempt while the target point is not within 50mm (also invalid pathfinding returns 0 distance)
     } while (dist(sx, sy, mx, my) < 50);
 
-    char buff[128];
-    sprintf(buff, "attempting to go to: (%.0f, %.0f) mp: (%.0f, %.0f)", tx, ty, mx, my);
+    char buff[64];
+    sprintf(buff, "go to: (%.0f, %.0f) mp: (%.0f, %.0f)", tx, ty, mx, my);
     ur_send_line(buff);
 
 
@@ -115,12 +120,8 @@ void explore_loop_path() {
         // try to go there!
         cq_queue(gen_move_to_cmd_intr(dex, dey, &move_bump_interrupt_callback));
 
-        ur_send_line("cp A");
-
         // update the weighted map after a successful movement
         cq_queue(gen_invoke_function_cmd(&update_weighted_map));
-
-        ur_send_line("cp B");
     }
 
     attempt_persist_point = 1;
@@ -128,7 +129,7 @@ void explore_loop_path() {
     // restart the loop!
     cq_queue(gen_invoke_function_cmd(&explore_loop_scan));
 
-    ur_send_line("cp C");
+    ur_send_line("pathing function done");
 
 }
 
